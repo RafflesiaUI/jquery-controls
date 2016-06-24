@@ -35,11 +35,6 @@
     width: 100%
 }
 
-.ui-combobox > .ui-togglebutton {
-    padding-left: 10px;
-    width: 1%
-}
-
 .ui-combobox > .ui-captionPane > span {
     border: none;
     display: block;
@@ -48,4 +43,34 @@
     -ms-overflow-style: none;
     text-overflow: ellipsis;
     -o-text-overflow: ellipsis;
+}
+
+.ui-combobox > .ui-togglebutton {
+    padding-left: 10px;
+    width: 1%
+}
+
+.ui-combobox.ui-dropdownmenu {
+    position: absolute;
+    z-index: 1000;
+    display: none;
+    float: left;
+    min-width: 160px;
+    padding: 5px 0;
+    margin: 2px 0 0;
+    font-size: 14px;
+    text-align: left;
+    background-color: #fff;
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+    border: 1px solid #ccc;
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-radius: 4px;
+    -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, .175);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, .175);
+    width: 250px;
+}
+
+.ui-combobox.ui-dropdownmenu.open {
+    display: block;
 }
