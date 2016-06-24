@@ -1,0 +1,51 @@
+.ui-combobox {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-collapse: collapse;
+    border-radius: 4px;
+    color: #333;
+    display: block;
+    width: 100%;
+    padding: 6px 12px;
+    margin-bottom: 0;
+    font-size: 14px;
+    font-weight: normal;
+    line-height: 1.42857143;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    background-image: none;
+}
+
+.ui-combobox > div {
+    display: table-cell;
+    margin: 0;
+    vertical-align: middle;
+}
+
+.ui-combobox > .ui-captionPane {
+    position: relative;
+    width: 100%
+}
+
+.ui-combobox > .ui-togglebutton {
+    padding-left: 10px;
+    width: 1%
+}
+
+.ui-combobox > .ui-captionPane > span {
+    border: none;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    -ms-overflow-style: none;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+}
