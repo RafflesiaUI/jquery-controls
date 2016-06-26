@@ -1,9 +1,9 @@
-$.widget("rafflesia.combobox", {
+﻿$.widget("rafflesia.combobox", {
     _create: function () {
         var self = this;
 
         self.element.hide();
-
+        
         self._createContainer();
         self._createComboBox();
         self._createDropDownMenu();
@@ -28,7 +28,7 @@ $.widget("rafflesia.combobox", {
         var captionPane = $("<div>")
             .addClass("ui-captionpane")
             .appendTo(self.button);
-
+  
         self.toggleButton = $("<div>")
             .addClass("ui-togglebutton")
             .html("<span class=\"caret\"></span>")
@@ -45,7 +45,7 @@ $.widget("rafflesia.combobox", {
         var self = this;
 
         self.dropdown = $("<div>")
-            .addClass("ui-dropdownmenu")
+            .addClass("ui-dropdownmenu")    
             .appendTo(self.container);
 
         self.searchBox = $("<input>")
@@ -71,7 +71,7 @@ $.widget("rafflesia.combobox", {
         self.dropdownList.append($("<li><a href='#'>10. Another action dssasdds sdas dssdsad sdsad sdsds sddsads</a></li>"));
     },
 
-    _refresh: function () {
+    _refresh: function() {
     },
 
     _destroy: function () {
@@ -151,14 +151,14 @@ $.widget("rafflesia.combobox", {
             offsetTop = elOffset.top,
             offsetBottom = elOffset.top + elSize.height;
 
-        if ((offsetLeft / viewPort.width) > 0.25 &&
+        if ((offsetLeft  / viewPort.width) > 0.25 &&
             (offsetRight / viewPort.width) > 0.75) {
             self.dropdown.addClass("right");
         } else {
             self.dropdown.removeClass("right");
         }
 
-
+        
         if ((offsetBottom / bodySize.height) > 0.75) {
             self.dropdown.addClass("up");
             return;
