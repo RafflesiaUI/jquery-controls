@@ -77,8 +77,6 @@
     _destroy: function () {
         var self = this;
 
-        self._unBindEvents();
-
         self.caption.remove();
         self.toggleButton.remove();
         self.button.remove();
@@ -90,25 +88,23 @@
     _bindEvents: function () {
         var self = this;
 
-        self.button.on("click.combobox", function () {
-            if (self.container.hasClass("open")) {
-                self.hide();
-            } else {
-                self.show();
+        self._on(self.button, {
+            click: function () {
+                if (self.container.hasClass("open")) {
+                    self.hide();
+                } else {
+                    self.show();
+                }
+
+                return false;
             }
-
-            return false;
         });
 
-        $(window).on("resize", function () {
-            self._resizeCaptionPane();
+        self._on(window, {
+            resize: function () {
+                self.hide();
+            }
         });
-    },
-
-    _unBindEvents: function () {
-        var self = this;
-
-        self.button.off('.combobox');
     },
 
     _resizeCaptionPane: function () {
@@ -159,7 +155,7 @@
         }
 
         
-        if ((offsetBottom / bodySize.height) > 0.75) {
+        if ((offsetBottom / Math.max(viewPort.height, bodySize.height)) > 0.75) {
             self.dropdown.addClass("up");
             return;
         }
@@ -205,10 +201,6 @@
           // and also close when focus changes to outside the picker (eg. tabbing between controls)
           .on("focusin.combobox", dropdownLostFocus);
 
-        $(window).on('resize.combobox', function () {
-            self.hide();
-        });
-
         self._trigger("show");
         self._repositionDropDownMenu();
         self.container.addClass("open");
@@ -219,16 +211,15 @@
     hide: function () {
         var self = this;
 
-        if (!self.container.hasClass("open")) {
-            return;
+        if (self.container.hasClass("open")) {
+            $(document).off('.combobox');
+
+            self._trigger("hide");
+            self.container.removeClass("open");
+            self.button.focus();
+            self._trigger("hidden");
         }
-
-        $(document).off('.combobox');
-        $(window).off('.combobox');
-
-        self._trigger("hide");
-        self.container.removeClass("open");
-        self.button.focus();
-        self._trigger("hidden");
+            
+        self._resizeCaptionPane();
     }
 });
