@@ -67,11 +67,6 @@ $.widget("rafflesia.combobox", {
                 minLength: self.options.minLength,
                 source: self.options.source,
 
-                close: function (event, ui) {           
-                    self.searchBox.autocomplete("widget")
-                        .height("auto")
-                        .empty();
-                },
                 focus: function (event, ui) {
                     return false;
                 },
@@ -88,6 +83,9 @@ $.widget("rafflesia.combobox", {
                 },
                 response: function (event, ui) {
                     // TODO : Show the result text
+                    if (ui.content.length == 0) {
+                        self.searchBox.autocomplete("widget").empty();
+                    }
                 },
                 change: function( event, ui ) {
                     self._trigger("change", event, ui);
@@ -195,11 +193,9 @@ $.widget("rafflesia.combobox", {
         } else {
             self.dropdown.removeClass("right");
         }
-
-        
+     
         if ((offsetBottom / Math.max(viewPort.height, bodySize.height)) > 0.75) {
             self.dropdown.addClass("up");
-            return;
         }
 
         var scrollTop = $(window).scrollTop();
@@ -220,6 +216,12 @@ $.widget("rafflesia.combobox", {
         this.searchBox
             .autocomplete("close")
             .autocomplete("instance").term = null;
+
+        this.searchBox
+            .autocomplete("widget")
+            .height("auto")
+            .empty();
+
         this.searchBox
             .val("")
             .focus();
@@ -274,10 +276,15 @@ $.widget("rafflesia.combobox", {
           .on("focusin.combobox", lostfocusMethod);
 
         self._trigger("show");
+
         self._repositionDropDownMenu();
         self.container.addClass("open");
         self._resetTerm();
+        if (self.options.minLength == 0) {
+            self.searchBox.autocomplete("search", "");
+        }
         self._resizeCaptionPane();
+
         self._trigger("shown");
     },
 
