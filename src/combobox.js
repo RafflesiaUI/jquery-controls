@@ -1,9 +1,15 @@
 $.widget("rafflesia.combobox", {
+    options: {
+        delay: 300,
+        minLength: 1,
+        source: null
+    },
+
     _create: function () {
         var self = this;
 
         self.element.hide();
-
+        
         self._createContainer();
         self._createComboBox();
         self._createDropDownMenu();
@@ -28,14 +34,14 @@ $.widget("rafflesia.combobox", {
         var captionPane = $("<div>")
             .addClass("ui-captionpane")
             .appendTo(self.button);
-
+  
         self.toggleButton = $("<div>")
             .addClass("ui-togglebutton")
             .html("<span class=\"caret\"></span>")
             .appendTo(self.button);
 
         self.caption = $("<span>")
-            .text("ASASA sadsds ssadsadsd dsadasdas sadasdsads sdsdsad sdsdsad")
+            .text(self._value())
             .appendTo(captionPane);
 
         self._resizeCaptionPane();
@@ -54,31 +60,123 @@ $.widget("rafflesia.combobox", {
             .addClass("ui-searchbox")
             .appendTo(self.dropdown));
 
-        self.dropdownList = $("<ul>")
-            .appendTo($("<div>")
+        self.dropdownList = $("<div>")
             .addClass("ui-dropdownlist")
-            .appendTo(self.dropdown));
+            .appendTo(self.dropdown);
 
-        self.dropdownList.append($("<li style='width: 100%'><a href='#'>1. Another action dssasdds sdas dssdsad sdsad sdsds sddsads</a></li>"));
-        self.dropdownList.append($("<li><a href='#'>2. Another action dssasdds sdas dssdsad sdsad sdsds sddsads</a></li>"));
-        self.dropdownList.append($("<li><a href='#'>3. Another action dssasdds sdas dssdsad sdsad sdsds sddsads</a></li>"));
-        self.dropdownList.append($("<li><a href='#'>4. Another action dssasdds sdas dssdsad sdsad sdsds sddsads</a></li>"));
-        self.dropdownList.append($("<li><a href='#'>5. Another action dssasdds sdas dssdsad sdsad sdsds sddsads</a></li>"));
-        self.dropdownList.append($("<li><a href='#'>6. Another action dssasdds sdas dssdsad sdsad sdsds sddsads</a></li>"));
-        self.dropdownList.append($("<li><a href='#'>7. Another action dssasdds sdas dssdsad sdsad sdsds sddsads</a></li>"));
-        self.dropdownList.append($("<li><a href='#'>8. Another action dssasdds sdas dssdsad sdsad sdsds sddsads</a></li>"));
-        self.dropdownList.append($("<li><a href='#'>9. Another action dssasdds sdas dssdsad sdsad sdsds sddsads</a></li>"));
-        self.dropdownList.append($("<li><a href='#'>10. Another action dssasdds sdas dssdsad sdsad sdsds sddsads</a></li>"));
+        self.progressBar = $("<label>")
+            .appendTo(self.dropdown);
+
+        var projects = [
+              {
+                  value: "jquery",
+                  label: "jQuery",
+                  desc: "the write less, do more, JavaScript library",
+                  icon: "jquery_32x32.png"
+              },
+              {
+                  value: "jquery-ui",
+                  label: "jQuery UI",
+                  desc: "the official user interface library for jQuery",
+                  icon: "jqueryui_32x32.png"
+              },
+              {
+                  value: "sizzlejs",
+                  label: "Sizzle JS",
+                  desc: "a pure-JavaScript CSS selector engine",
+                  icon: "sizzlejs_32x32.png"
+              },
+              {
+                  value: "sizzlejs7",
+                  label: "Sizzle JS7",
+                  desc: "a pure-JavaScript CSS selector engine",
+                  icon: "sizzlejs_32x32.png"
+              },
+              {
+                  value: "sizzlejs6",
+                  label: "Sizzle JS6",
+                  desc: "a pure-JavaScript CSS selector engine",
+                  icon: "sizzlejs_32x32.png"
+              },
+              {
+                  value: "sizzlejs5",
+                  label: "Sizzle JS5",
+                  desc: "a pure-JavaScript CSS selector engine",
+                  icon: "sizzlejs_32x32.png"
+              },
+              {
+                  value: "sizzlejs4",
+                  label: "Sizzle JS4",
+                  desc: "a pure-JavaScript CSS selector engine",
+                  icon: "sizzlejs_32x32.png"
+              },
+              {
+                  value: "sizzlejs3",
+                  label: "Sizzle JS3",
+                  desc: "a pure-JavaScript CSS selector engine",
+                  icon: "sizzlejs_32x32.png"
+              },
+              {
+                  value: "sizzlejs2",
+                  label: "Sizzle JS2",
+                  desc: "a pure-JavaScript CSS selector engine",
+                  icon: "sizzlejs_32x32.png"
+              }
+        ];
+
+        self.searchBox
+            .autocomplete({
+                appendTo: self.dropdownList,
+                delay: self.options.delay,
+                minLength: self.options.minLength,
+                source: projects,
+
+                close: function (event, ui) {
+                    if (self.container.hasClass("open"))
+                    {   //TODO : Reset term when dropdown close
+                        this.value = "";
+                    }                    
+                    self.searchBox.autocomplete("widget").empty();
+                },
+                focus: function (event, ui) {
+                    return false;
+                },
+                select: function (event, ui) {
+                    //TODO
+                    self.caption.text(ui.item.value);
+                    self._value(ui.item.value);
+                    self.hide();
+                    return false;
+                },
+                search: function (event, ui) {
+                    // TODO : Show searching text
+                },
+                response: function (event, ui) {
+                    // TODO : Show the result text
+                },
+                change: function( event, ui ) {
+                    self._trigger("change", event, ui);
+                }
+            })
+            .autocomplete("instance")._renderItem = function (ul, item) {
+                // TODO : allow user customise
+                return $("<li>")
+                  .append("<a>" + item.label + "<br>" + item.desc + "</a>")
+                  .appendTo(ul);
+            };
     },
 
-    _refresh: function () {
+    _refresh: function() {
     },
 
     _destroy: function () {
         var self = this;
 
-        self._unBindEvents();
+        self.searchBox.autocomplete("destroy");
 
+        self.searchBox.remove();
+        self.dropdownList.remove();
+        self.dropdown.remove();
         self.caption.remove();
         self.toggleButton.remove();
         self.button.remove();
@@ -90,25 +188,23 @@ $.widget("rafflesia.combobox", {
     _bindEvents: function () {
         var self = this;
 
-        self.button.on("click.combobox", function () {
-            if (self.container.hasClass("open")) {
-                self.hide();
-            } else {
-                self.show();
+        self._on(self.button, {
+            click: function () {
+                if (self.container.hasClass("open")) {
+                    self.hide();
+                } else {
+                    self.show();
+                }
+
+                return false;
             }
-
-            return false;
         });
 
-        $(window).on("resize", function () {
-            self._resizeCaptionPane();
+        self._on(window, {
+            resize: function () {
+                self.hide();
+            }
         });
-    },
-
-    _unBindEvents: function () {
-        var self = this;
-
-        self.button.off('.combobox');
     },
 
     _resizeCaptionPane: function () {
@@ -122,11 +218,10 @@ $.widget("rafflesia.combobox", {
     },
 
     _repositionDropDownMenu: function () {
-        var self = this,
-            dropdownlist = $('.ui-dropdownlist', self.dropdown);
+        var self = this;
 
         self.dropdown.removeClass("up");
-        dropdownlist.css('height', 'auto');
+        self.dropdownList.height("auto");
 
         var elOffset = self.button.offset(),
             elSize = {
@@ -151,15 +246,15 @@ $.widget("rafflesia.combobox", {
             offsetTop = elOffset.top,
             offsetBottom = elOffset.top + elSize.height;
 
-        if ((offsetLeft / viewPort.width) > 0.25 &&
+        if ((offsetLeft  / viewPort.width) > 0.25 &&
             (offsetRight / viewPort.width) > 0.75) {
             self.dropdown.addClass("right");
         } else {
             self.dropdown.removeClass("right");
         }
 
-
-        if ((offsetBottom / bodySize.height) > 0.75) {
+        
+        if ((offsetBottom / Math.max(viewPort.height, bodySize.height)) > 0.75) {
             self.dropdown.addClass("up");
             return;
         }
@@ -173,8 +268,31 @@ $.widget("rafflesia.combobox", {
         if (self.dropdown.hasClass("up")) {
             var maxHeight = offsetTop - scrollTop;
             if (maxHeight < dpSize.height) {
-                dropdownlist.outerHeight(maxHeight - 55);
+                self.dropdownList.outerHeight(maxHeight - 55);
             }
+        }
+    },
+
+    _value: function (value) {
+        if (value)
+        {
+            this.element.val(value);
+            return;
+        }
+
+        return this.element.val();
+    },
+
+    _setOption: function (key, value) {
+        this._super(key, value);
+        if (key === "delay") {
+            self.searchBox.autocomplete("option", "delay", value);
+        }
+        if (key === "minLength") {
+            self.searchBox.autocomplete("option", "minLength", value);
+        }
+        if (key === "source") {
+            self.searchBox.autocomplete("option", "source", value);
         }
     },
 
@@ -205,13 +323,11 @@ $.widget("rafflesia.combobox", {
           // and also close when focus changes to outside the picker (eg. tabbing between controls)
           .on("focusin.combobox", dropdownLostFocus);
 
-        $(window).on('resize.combobox', function () {
-            self.hide();
-        });
-
         self._trigger("show");
         self._repositionDropDownMenu();
         self.container.addClass("open");
+        self.searchBox.focus();
+        //TODO: Set min length text
         self._resizeCaptionPane();
         self._trigger("shown");
     },
@@ -219,16 +335,17 @@ $.widget("rafflesia.combobox", {
     hide: function () {
         var self = this;
 
-        if (!self.container.hasClass("open")) {
-            return;
+        if (self.container.hasClass("open")) {
+            self.searchBox.autocomplete("close");
+
+            $(document).off(".combobox");
+
+            self._trigger("hide");
+            self.container.removeClass("open");
+            self.button.focus();
+            self._trigger("hidden");
         }
-
-        $(document).off('.combobox');
-        $(window).off('.combobox');
-
-        self._trigger("hide");
-        self.container.removeClass("open");
-        self.button.focus();
-        self._trigger("hidden");
+            
+        self._resizeCaptionPane();
     }
 });
