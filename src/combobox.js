@@ -2,7 +2,9 @@ $.widget("rafflesia.combobox", {
     options: {
         delay: 300,
         minLength: 1,
-        source: null
+        source: null,
+
+        renderDataItem: null
     },
 
     _create: function () {
@@ -101,10 +103,12 @@ $.widget("rafflesia.combobox", {
         };
 
         self.searchBox.autocomplete("instance")._renderItem = function (ul, item) {
-            // TODO : allow user customise
-            return $("<li>")
-                .append("<a>" + item.label + "<br>" + item.desc + "</a>")
-                .appendTo(ul);
+            if (typeof self.options.renderDataItem === "function")
+            {
+                return self.options.renderDataItem(ul, item);
+            }
+
+            return $("<li>").text(item.label).appendTo(ul);
         };
     },
 
@@ -281,15 +285,16 @@ $.widget("rafflesia.combobox", {
         self._trigger("show");
 
         if ('ontouchstart' in document.documentElement) {
-            self.backdrop = $('<div class="ui-dropdown-backdrop"/>')
+            self.backdrop = $('<div>')
+                .addClass("ui-dropdown-backdrop")
                 .insertAfter(self.button)
                 .on("click", function () {
                     self.hide();
                 });
         }
 
-        self._repositionDropDownMenu();
         self.container.addClass("open");
+        self.searchBox.autocomplete("widget").height("auto");
         self.button.attr("aria-expanded", "true");
         self._resetTerm();
         if (self.options.minLength == 0) {
