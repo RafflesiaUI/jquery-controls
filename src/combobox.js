@@ -1,8 +1,19 @@
+/*
+* Rafflesia UI
+* @version: 1.0.0
+* @author: GSLAI
+* @copyright: Copyright (c) 2016 Rafflesia UI Foundation. All rights reserved.
+* @license: Licensed under the MIT license.
+*/
+
 $.widget("rafflesia.combobox", {
     options: {
         delay: 300,
         minLength: 1,
         source: null,
+
+        loadingMessage: "Loading...",
+        noResultsMessage: "No results match",
 
         renderDataItem: null
     },
@@ -11,7 +22,7 @@ $.widget("rafflesia.combobox", {
         var self = this;
 
         self.element.hide();
-        
+
         self._createContainer();
         self._createComboBox();
         self._createDropDownMenu();
@@ -36,7 +47,7 @@ $.widget("rafflesia.combobox", {
         var captionPane = $("<div>")
             .addClass("ui-captionpane")
             .appendTo(self.button);
-  
+
         self.toggleButton = $("<div>")
             .addClass("ui-togglebutton")
             .html("<span class=\"caret\"></span>")
@@ -73,22 +84,37 @@ $.widget("rafflesia.combobox", {
                     return false;
                 },
                 select: function (event, ui) {
+                    if (ui.item.state &&
+                       (ui.item.state == "loading" || ui.item.state == "info")) {
+                        return false;
+                    }
+
                     self.caption.text(ui.item.value);
                     self._value(ui.item.value);
                     self.hide();
+                    self.button.focus();
+
                     return false;
                 },
                 search: function (event, ui) {
-                    self.searchBox.autocomplete("widget").height("auto");
-                    // TODO : Show searching text
+                    self.searchBox.autocomplete("widget")
+                        .height("auto")
+                        .append($("<li>")
+                        .addClass("ui-autocomplete-loading")
+                        .data("ui-autocomplete-item", { value: null, state: "loading" })
+                        .html(self.options.loadingMessage));
                 },
                 response: function (event, ui) {
-                    // TODO : Show the result text
                     if (ui.content.length == 0) {
-                        self.searchBox.autocomplete("widget").empty();
+                        self.searchBox.autocomplete("widget")
+                            .empty()
+                            .append($("<li>")
+                            .addClass("ui-autocomplete-info")
+                            .data("ui-autocomplete-item", { value: null, state: "info" })
+                            .html(self.options.noResultsMessage));
                     }
                 },
-                change: function( event, ui ) {
+                change: function (event, ui) {
                     self._trigger("change", event, ui);
                 }
             });
@@ -103,8 +129,7 @@ $.widget("rafflesia.combobox", {
         };
 
         self.searchBox.autocomplete("instance")._renderItem = function (ul, item) {
-            if (typeof self.options.renderDataItem === "function")
-            {
+            if (typeof self.options.renderDataItem === "function") {
                 return self.options.renderDataItem(ul, item);
             }
 
@@ -112,7 +137,7 @@ $.widget("rafflesia.combobox", {
         };
     },
 
-    _refresh: function() {
+    _refresh: function () {
     },
 
     _destroy: function () {
@@ -194,13 +219,13 @@ $.widget("rafflesia.combobox", {
             offsetTop = elOffset.top,
             offsetBottom = elOffset.top + elSize.height;
 
-        if ((offsetLeft  / viewPort.width) > 0.25 &&
+        if ((offsetLeft / viewPort.width) > 0.25 &&
             (offsetRight / viewPort.width) > 0.75) {
             self.dropdown.addClass("right");
         } else {
             self.dropdown.removeClass("right");
         }
-     
+
         if ((offsetBottom / Math.max(viewPort.height, bodySize.height)) > 0.75) {
             self.dropdown.addClass("up");
         }
@@ -240,7 +265,7 @@ $.widget("rafflesia.combobox", {
             self.searchBox.autocomplete("option", "delay", value);
         }
         if (key === "minLength") {
-           self.searchBox.autocomplete("option", "minLength", value);
+            self.searchBox.autocomplete("option", "minLength", value);
         }
         if (key === "source") {
             self.searchBox.autocomplete("option", "source", value);
@@ -265,14 +290,14 @@ $.widget("rafflesia.combobox", {
 
         var lostfocusMethod = function (evt) {
             var target = $(evt.target);
-            if (evt.type == "focusin" || target.closest(self.container).length) {
+            if (target.closest(self.container).length) {
                 return;
             }
 
             self.hide();
         };
 
-        // Bind global datepicker mousedown for hiding and
+        // Bind global combobox mousedown for hiding and
         $(document)
           .on("mousedown.combobox", lostfocusMethod)
            // also support mobile devices
@@ -313,19 +338,16 @@ $.widget("rafflesia.combobox", {
 
             self._trigger("hide");
 
-            if (self.backdrop)
-            {
+            if (self.backdrop) {
                 self.backdrop.remove();
                 self.backdrop = null;
             }
 
             self.container.removeClass("open");
-            self.button
-                .attr("aria-expanded", "false")
-                .focus();
+            self.button.attr("aria-expanded", "false");
             self._trigger("hidden");
         }
-            
+
         self._resizeCaptionPane();
     }
 });

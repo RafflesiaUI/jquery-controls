@@ -1,3 +1,11 @@
+/*
+* Rafflesia UI
+* @version: 1.0.0
+* @author: GSLAI
+* @copyright: Copyright (c) 2016 Rafflesia UI Foundation. All rights reserved.
+* @license: Licensed under the MIT license.
+*/
+
 .ui-combobox {
     position: relative;
 }
@@ -150,6 +158,15 @@
 .ui-combobox > .ui-dropdownmenu > ul.ui-autocomplete > li.ui-state-focus {
     color: #262626;
     background-color: #f5f5f5;
+}
+
+.ui-combobox > .ui-dropdownmenu > ul.ui-autocomplete > li.ui-autocomplete-loading,
+.ui-combobox > .ui-dropdownmenu > ul.ui-autocomplete > li.ui-autocomplete-info {
+    color: inherit;
+    background-color: inherit;
+    padding: 3px 10px;
+    text-align: center;
+    font-weight: bold;
 }
 
 .ui-combobox > .ui-dropdown-backdrop {
