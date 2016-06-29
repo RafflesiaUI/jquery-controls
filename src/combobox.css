@@ -62,8 +62,6 @@
     z-index: 1000;
     display: none;
     float: left;
-    min-width: 160px;
-    max-height: 350px;
     padding: 5px 0;
     margin: 2px 0 0;
     font-size: 14px;
@@ -77,6 +75,9 @@
     border-radius: 4px;
     -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, .175);
     box-shadow: 0 6px 12px rgba(0, 0, 0, .175);
+    max-height: 350px;
+    min-width: 160px;
+    width: 100%;
 }
 
 .ui-combobox.open > .ui-dropdownmenu {
@@ -158,4 +159,10 @@
     bottom: 0;
     left: 0;
     z-index: 990;
+}
+
+@media (min-width: 992px) {
+    .ui-combobox > .ui-dropdownmenu {
+        width: auto;
+    }
 }
