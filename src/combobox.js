@@ -12,6 +12,7 @@ $.widget("rafflesia.combobox", {
         minLength: 1,
         source: null,
 
+        minLengthMessage: "Please enter {0} or more characters",
         loadingMessage: "Loading...",
         noResultsMessage: "No results match",
 
@@ -80,6 +81,12 @@ $.widget("rafflesia.combobox", {
                 minLength: self.options.minLength,
                 source: self.options.source,
 
+                close: function () {
+                    if (this.value.length < self.options.minLength &&
+                        self.options.minLengthMessage.length > 0) {
+                        self._message(String.format(self.options.minLengthMessage, self.options.minLength), "info");
+                    }
+                },
                 focus: function (event, ui) {
                     return false;
                 },
@@ -97,21 +104,12 @@ $.widget("rafflesia.combobox", {
                     return false;
                 },
                 search: function (event, ui) {
-                    self.searchBox.autocomplete("widget")
-                        .height("auto")
-                        .append($("<li>")
-                        .addClass("ui-autocomplete-loading")
-                        .data("ui-autocomplete-item", { value: null, state: "loading" })
-                        .html(self.options.loadingMessage));
+                    self.searchBox.autocomplete("widget").height("auto");
+                    self._message(self.options.loadingMessage, "loading");
                 },
                 response: function (event, ui) {
                     if (ui.content.length == 0) {
-                        self.searchBox.autocomplete("widget")
-                            .empty()
-                            .append($("<li>")
-                            .addClass("ui-autocomplete-info")
-                            .data("ui-autocomplete-item", { value: null, state: "info" })
-                            .html(self.options.noResultsMessage));
+                        self._message(self.options.noResultsMessage, "info");
                     }
                 },
                 change: function (event, ui) {
@@ -272,6 +270,15 @@ $.widget("rafflesia.combobox", {
         }
     },
 
+    _message: function (message, state) {
+        this.searchBox.autocomplete("widget")
+            .empty()
+            .append($("<li>")
+            .addClass("ui-autocomplete-info")
+            .data("ui-autocomplete-item", { value: null, state: state })
+            .html(message));
+    },
+
     _value: function (value) {
         if (value) {
             this.element.val(value);
@@ -321,10 +328,15 @@ $.widget("rafflesia.combobox", {
         self.container.addClass("open");
         self.searchBox.autocomplete("widget").height("auto");
         self.button.attr("aria-expanded", "true");
+
         self._resetTerm();
-        if (self.options.minLength == 0) {
+        if (self.options.minLength <= 0) {
             self.searchBox.autocomplete("search", "");
         }
+        else if (self.options.minLengthMessage.length > 0) {
+            self._message(String.format(self.options.minLengthMessage, self.options.minLength), "info");
+        }
+
         self._resizeCaptionPane();
 
         self._trigger("shown");

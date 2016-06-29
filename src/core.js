@@ -1,3 +1,11 @@
+/*
+* Rafflesia UI
+* @version: 1.0.0
+* @author: GSLAI
+* @copyright: Copyright (c) 2016 Rafflesia UI Foundation. All rights reserved.
+* @license: Licensed under the MIT license.
+*/
+
 String.format = function () {
     var s = arguments[0];
     for (var i = 0; i < arguments.length - 1; i++) {
