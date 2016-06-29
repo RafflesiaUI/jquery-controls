@@ -77,8 +77,7 @@ $.widget("rafflesia.combobox", {
                     return false;
                 },
                 search: function (event, ui) {
-                    self.searchBox.autocomplete("widget")
-                        .height("auto");
+                    self.searchBox.autocomplete("widget").height("auto");
                     // TODO : Show searching text
                 },
                 response: function (event, ui) {
@@ -144,7 +143,11 @@ $.widget("rafflesia.combobox", {
 
         self._on(window, {
             resize: function () {
-                self.hide();
+                self._resizeCaptionPane();
+                if (self.container.hasClass("open")) {
+                    self.searchBox.autocomplete("widget").height("auto");
+                    self._repositionDropDownMenu();
+                }
             }
         });
     },
@@ -233,7 +236,7 @@ $.widget("rafflesia.combobox", {
             self.searchBox.autocomplete("option", "delay", value);
         }
         if (key === "minLength") {
-            self.searchBox.autocomplete("option", "minLength", value);
+           self.searchBox.autocomplete("option", "minLength", value);
         }
         if (key === "source") {
             self.searchBox.autocomplete("option", "source", value);
@@ -268,17 +271,26 @@ $.widget("rafflesia.combobox", {
         // Bind global datepicker mousedown for hiding and
         $(document)
           .on("mousedown.combobox", lostfocusMethod)
-          // also support mobile devices
+           // also support mobile devices
           .on("touchend.combobox", lostfocusMethod)
-          // also explicitly play nice with Bootstrap dropdowns, which stopPropagation when clicking them
+           // also explicitly play nice with Bootstrap dropdowns, which stopPropagation when clicking them
           .on("click.combobox", "[data-toggle=dropdown]", lostfocusMethod)
-          // and also close when focus changes to outside the picker (eg. tabbing between controls)
+           // and also close when focus changes to outside the picker (eg. tabbing between controls)
           .on("focusin.combobox", lostfocusMethod);
 
         self._trigger("show");
 
+        if ('ontouchstart' in document.documentElement) {
+            self.backdrop = $('<div class="ui-dropdown-backdrop"/>')
+                .insertAfter(self.button)
+                .on("click", function () {
+                    self.hide();
+                });
+        }
+
         self._repositionDropDownMenu();
         self.container.addClass("open");
+        self.button.attr("aria-expanded", "true");
         self._resetTerm();
         if (self.options.minLength == 0) {
             self.searchBox.autocomplete("search", "");
@@ -295,8 +307,17 @@ $.widget("rafflesia.combobox", {
             $(document).off(".combobox");
 
             self._trigger("hide");
+
+            if (self.backdrop)
+            {
+                self.backdrop.remove();
+                self.backdrop = null;
+            }
+
             self.container.removeClass("open");
-            self.button.focus();
+            self.button
+                .attr("aria-expanded", "false")
+                .focus();
             self._trigger("hidden");
         }
             
