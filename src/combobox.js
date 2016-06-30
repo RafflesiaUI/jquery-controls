@@ -16,6 +16,7 @@ $.widget("rafflesia.combobox", {
         loadingMessage: "Loading...",
         noResultsMessage: "No results match",
 
+        normalizeDataItems: null,
         renderDataItem: null
     },
 
@@ -116,6 +117,28 @@ $.widget("rafflesia.combobox", {
                     self._trigger("change", event, ui);
                 }
             });
+
+        self.searchBox.autocomplete("instance")._normalize = function (items) {
+            if (typeof self.options.normalizeDataItems === "function") {
+                return self.options.normalizeDataItems(items);
+            }
+
+            if (items.length && items[0]["label"] && items[0]["value"]) {
+                return items;
+            }
+            return $.map(items, function (item) {
+                if (typeof item === "string") {
+                    return {
+                        label: item,
+                        value: item
+                    };
+                }
+                return $.extend({}, item, {
+                    label: item["label"] || item["value"],
+                    value: item["value"] || item["label"]
+                });
+            });
+        };
 
         self.searchBox.autocomplete("instance")._renderMenu = function (ul, items) {
             var that = this;
@@ -335,6 +358,7 @@ $.widget("rafflesia.combobox", {
         }
         else if (self.options.minLengthMessage.length > 0) {
             self._message(String.format(self.options.minLengthMessage, self.options.minLength), "info");
+            self._repositionDropDownMenu();
         }
 
         self._resizeCaptionPane();
