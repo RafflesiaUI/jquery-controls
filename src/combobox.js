@@ -156,6 +156,34 @@ $.widget("rafflesia.combobox", {
 
             return $("<li>").text(item.label).appendTo(ul);
         };
+
+        self.searchBox.autocomplete("instance")._search = function (value) {
+            var that = this;
+
+            that.pending++;
+            that.element.addClass("ui-autocomplete-loading");
+            that.cancelSearch = false;
+
+            // TODO: InfiniteScroll
+            that.source({ term: value }, that._response());
+        };
+
+        self.searchBox.autocomplete("instance")._suggest = function (items) {
+            var that = this,
+                ul = that.menu.element;
+
+            // TODO: InfiniteScroll
+            ul.empty();
+            that._renderMenu(ul, items);
+            that.isNewMenu = true;
+            that.menu.refresh();
+
+            ul.show();
+
+            if (that.options.autoFocus) {
+                that.menu.next();
+            }
+        };
     },
 
     _refresh: function () {
@@ -197,6 +225,20 @@ $.widget("rafflesia.combobox", {
                 if (self.container.hasClass("open")) {
                     self.searchBox.autocomplete("widget").height("auto");
                     self._repositionDropDownMenu();
+                }
+            }
+        });
+
+        self._on(self.searchBox.autocomplete("widget"), {
+            scroll: function (event) {
+                var elem = $(event.currentTarget),
+                    scrollHeight = elem[0].scrollHeight,
+                    scrollTop = elem.scrollTop(),
+                    outerHeight = elem.outerHeight();
+
+                if (scrollTop > 0 &&
+                    scrollHeight - scrollTop == outerHeight) {
+                    // TODO: InfiniteScroll - scroll at bottom
                 }
             }
         });
