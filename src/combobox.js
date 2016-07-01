@@ -29,6 +29,7 @@ $.widget("rafflesia.combobox", {
         self._createComboBox();
         self._createDropDownMenu();
 
+        self._initSource();
         self._bindEvents();
     },
 
@@ -161,11 +162,10 @@ $.widget("rafflesia.combobox", {
             var that = this;
 
             that.pending++;
-            that.element.addClass("ui-autocomplete-loading");
             that.cancelSearch = false;
 
             // TODO: InfiniteScroll
-            that.source({ term: value }, that._response());
+            self.source({ term: value }, that._response());
         };
 
         self.searchBox.autocomplete("instance")._suggest = function (items) {
@@ -322,16 +322,50 @@ $.widget("rafflesia.combobox", {
             .focus();
     },
 
+    _initSource: function () {
+        var array, url,
+			self = this;
+
+        if ($.isArray(this.options.source)) {
+            array = this.options.source;
+            this.source = function (request, response) {
+                response($.ui.autocomplete.filter(array, request.term));
+            };
+        } else if (typeof this.options.source === "string") {
+            url = this.options.source;
+            this.source = function (request, response) {
+                if (self.xhr) {
+                    self.xhr.abort();
+                }
+                self.xhr = $.ajax({
+                    url: url,
+                    data: request,
+                    dataType: "json",
+                    success: function (data) {
+                        response(data);
+                    },
+                    error: function () {
+                        response([]);
+                    }
+                });
+            };
+        } else {
+            this.source = this.options.source;
+        }
+    },
+
     _setOption: function (key, value) {
         this._super(key, value);
-        if (key === "delay") {
-            self.searchBox.autocomplete("option", "delay", value);
-        }
-        if (key === "minLength") {
-            self.searchBox.autocomplete("option", "minLength", value);
-        }
-        if (key === "source") {
-            self.searchBox.autocomplete("option", "source", value);
+
+        switch (key) {
+            case "delay":
+            case "minLength":
+                this.searchBox.autocomplete("option", key, value);
+                break;
+
+            case "source":
+                this._initSource();
+                break;
         }
     },
 
