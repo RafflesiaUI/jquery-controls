@@ -11,6 +11,7 @@ $.widget("rafflesia.combobox", {
         delay: 300,
         minLength: 1,
         source: null,
+        paging: null,
 
         minLengthMessage: "Please enter {0} or more characters",
         loadingMessage: "Loading...",
@@ -21,16 +22,16 @@ $.widget("rafflesia.combobox", {
     },
 
     _create: function () {
-        var self = this;
+        this._setOption("paging", this.options.paging);
 
-        self.element.hide();
+        this.element.hide();
 
-        self._createContainer();
-        self._createComboBox();
-        self._createDropDownMenu();
+        this._createContainer();
+        this._createComboBox();
+        this._createDropDownMenu();
 
-        self._initSource();
-        self._bindEvents();
+        this._initSource();
+        this._bindEvents();
     },
 
     _createContainer: function () {
@@ -84,6 +85,8 @@ $.widget("rafflesia.combobox", {
                 source: self.options.source,
 
                 close: function () {
+                    self.pageIndex = 1;
+
                     if (this.value.length < self.options.minLength &&
                         self.options.minLengthMessage.length > 0) {
                         self._message(String.format(self.options.minLengthMessage, self.options.minLength), "info");
@@ -106,6 +109,8 @@ $.widget("rafflesia.combobox", {
                     return false;
                 },
                 search: function (event, ui) {
+                    self.pageIndex = 1;
+
                     self.searchBox.autocomplete("widget").height("auto");
                     self._message(self.options.loadingMessage, "loading");
                 },
@@ -147,7 +152,8 @@ $.widget("rafflesia.combobox", {
                 that._renderItemData(ul, item);
             });
 
-            self._repositionDropDownMenu();
+            self._positionDropDownMenu();
+            self._resizeDropDownMenu();
         };
 
         self.searchBox.autocomplete("instance")._renderItem = function (ul, item) {
@@ -164,8 +170,14 @@ $.widget("rafflesia.combobox", {
             that.pending++;
             that.cancelSearch = false;
 
-            // TODO: InfiniteScroll
-            self.source({ term: value }, that._response());
+            var request = { term: value };
+            if (self._allowPaging()) {
+                request = $.extend({
+                    skip: (self.pageIndex - 1) * self.options.paging.pageSize,
+                    take: self.options.paging.pageSize
+                }, request);
+            }
+            self.source(request, that._response());
         };
 
         self.searchBox.autocomplete("instance")._suggest = function (items) {
@@ -224,7 +236,8 @@ $.widget("rafflesia.combobox", {
                 self._resizeCaptionPane();
                 if (self.container.hasClass("open")) {
                     self.searchBox.autocomplete("widget").height("auto");
-                    self._repositionDropDownMenu();
+                    self._positionDropDownMenu();
+                    self._resizeDropDownMenu();
                 }
             }
         });
@@ -254,7 +267,7 @@ $.widget("rafflesia.combobox", {
             .show();
     },
 
-    _repositionDropDownMenu: function () {
+    _positionDropDownMenu: function () {
         var self = this;
 
         self.dropdown.removeClass("up");
@@ -298,12 +311,20 @@ $.widget("rafflesia.combobox", {
         if ((bottom / viewPort.height) > 0.75) {
             self.dropdown.addClass("up");
         }
+    },
 
-        if (self.dropdown.hasClass("up")) {
-            var maxHeight = offsetTop - scrollTop;
-            if (maxHeight < dpSize.height) {
-                self.searchBox.autocomplete("widget").outerHeight(maxHeight - 55);
-            }
+    _resizeDropDownMenu: function () {
+        if (!this.dropdown.hasClass("up")) {
+            return;
+        }
+
+        var elOffsetTop = this.button.offset().top,
+            dpHeight = this.dropdown.outerHeight(),
+            scrollTop = $(window).scrollTop();
+
+        var maxHeight = elOffsetTop - scrollTop;
+        if (maxHeight < dpHeight) {
+            this.searchBox.autocomplete("widget").outerHeight(maxHeight - 55);
         }
     },
 
@@ -329,7 +350,11 @@ $.widget("rafflesia.combobox", {
         if ($.isArray(this.options.source)) {
             array = this.options.source;
             this.source = function (request, response) {
-                response($.ui.autocomplete.filter(array, request.term));
+                var data = $.ui.autocomplete.filter(array, request.term);
+                if (self._allowPaging()) {
+                    data = data.slice(request.skip, request.take);
+                }
+                response(data);
             };
         } else if (typeof this.options.source === "string") {
             url = this.options.source;
@@ -366,6 +391,16 @@ $.widget("rafflesia.combobox", {
             case "source":
                 this._initSource();
                 break;
+
+            case "paging":
+                if (this.options.paging) {
+                    var defaults = {
+                        autoTrigger: true,
+                        pageSize: 15
+                    };
+                    this.options.paging = $.extend({}, defaults, this.options.paging);
+                }
+                break;
         }
     },
 
@@ -385,6 +420,10 @@ $.widget("rafflesia.combobox", {
         }
 
         return this.element.val();
+    },
+
+    _allowPaging: function () {
+        return (this.options.paging && this.options.paging.pageSize > 0);
     },
 
     show: function () {
@@ -424,6 +463,7 @@ $.widget("rafflesia.combobox", {
                 });
         }
 
+        self._positionDropDownMenu();
         self.container.addClass("open");
         self.searchBox.autocomplete("widget").height("auto");
         self.button.attr("aria-expanded", "true");
@@ -434,7 +474,7 @@ $.widget("rafflesia.combobox", {
         }
         else if (self.options.minLengthMessage.length > 0) {
             self._message(String.format(self.options.minLengthMessage, self.options.minLength), "info");
-            self._repositionDropDownMenu();
+            self._resizeDropDownMenu();
         }
 
         self._resizeCaptionPane();
