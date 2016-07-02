@@ -215,8 +215,6 @@ $.widget("rafflesia.combobox", {
             that.menu.refresh();
 
             ul.show();
-
-            that.menu.next();
         };
     },
 
