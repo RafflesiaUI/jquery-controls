@@ -103,7 +103,7 @@ $.widget("rafflesia.combobox", {
                         return false;
                     }
 
-                    self.caption.text(ui.item.value);
+                    self.caption.text(ui.item.label);
                     self._value(ui.item.value);
                     self.hide();
                     self.button.focus();
@@ -393,6 +393,7 @@ $.widget("rafflesia.combobox", {
                     self.xhr.abort();
                 }
                 self.xhr = $.ajax({
+                    async: true,
                     url: url,
                     data: request,
                     dataType: "json",
