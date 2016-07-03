@@ -91,6 +91,7 @@ $.widget("rafflesia.combobox", {
 
                     if (this.value.length < self.options.minLength &&
                         self.options.minLengthMessage.length > 0) {
+                        self.searchBox.autocomplete("widget").height("auto");
                         self._message(String.format(self.options.minLengthMessage, self.options.minLength));
                     }
                 },
@@ -103,6 +104,7 @@ $.widget("rafflesia.combobox", {
                         return false;
                     }
 
+                    self.button.attr("title", ui.item.label);
                     self.caption.text(ui.item.label);
                     self._value(ui.item.value);
                     self.hide();
