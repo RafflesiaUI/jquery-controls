@@ -121,6 +121,8 @@ $.widget("rafflesia.combobox", {
                     self.hide();
                     self.button.focus();
 
+                    self._trigger("change", event, ui);
+
                     return false;
                 },
                 search: function (event, ui) {
@@ -135,9 +137,6 @@ $.widget("rafflesia.combobox", {
                     if (ui.content.length == 0 && self.pageIndex < 2) {
                         self._message(self.options.noResultsMessage);
                     }
-                },
-                change: function (event, ui) {
-                    self._trigger("change", event, ui);
                 }
             });
 
