@@ -48,6 +48,7 @@ $.widget("rafflesia.combobox", {
         var self = this;
 
         self.button = $("<button>")
+            .attr("type", "button")
             .appendTo(self.container);
 
         var captionPane = $("<div>")
