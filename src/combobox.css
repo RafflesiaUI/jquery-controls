@@ -1,16 +1,13 @@
 /*
 * Rafflesia UI
-* @version: 1.0.0
+* @version: 1.0.1
 * @author: GSLAI
 * @copyright: Copyright (c) 2016 Rafflesia UI Foundation. All rights reserved.
 * @license: Licensed under the MIT license.
 */
 
 .ui-combobox {
-    position: relative;
-}
-
-.ui-combobox > button {
+    background-image: none;
     background-color: #fff;
     border: 1px solid #ccc;
     border-collapse: collapse;
@@ -33,21 +30,21 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    background-image: none;
 }
 
-.ui-combobox > button > div {
+.ui-combobox > .ui-captionpane,
+.ui-combobox > .ui-togglebutton {
     display: table-cell;
     margin: 0;
     vertical-align: middle;
 }
 
-.ui-combobox > button > .ui-captionpane {
+.ui-combobox > .ui-captionpane {
     position: relative;
     width: 100%
 }
 
-.ui-combobox > button > .ui-captionpane > span {
+.ui-combobox > .ui-captionpane > span {
     border: none;
     display: block;
     text-align: left;
@@ -58,20 +55,17 @@
     -o-text-overflow: ellipsis;
 }
 
-.ui-combobox > button > .ui-togglebutton {
+.ui-combobox > .ui-togglebutton {
     padding-left: 10px;
     width: 1%
 }
 
-.ui-combobox > .ui-dropdownmenu {
+.ui-dropdownmenu {
     position: absolute;
-    top: 100%;
-    left: 0;
     z-index: 1000;
     display: none;
-    float: left;
     padding: 5px 0;
-    margin: 2px 0 0;
+    margin: 0;
     font-size: 14px;
     text-align: left;
     list-style: none;
@@ -83,33 +77,20 @@
     border-radius: 4px;
     -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, .175);
     box-shadow: 0 6px 12px rgba(0, 0, 0, .175);
-    max-height: 350px;
     min-width: 160px;
-    width: 100%;
 }
 
-.ui-combobox.open > .ui-dropdownmenu {
+.ui-dropdownmenu.open {
     display: block;
 }
 
-.ui-combobox.open > .ui-dropdownmenu.right {
-    right: 0;
-    left: auto;
-}
-
-.ui-combobox.open > .ui-dropdownmenu.up {
-    top: auto;
-    bottom: 100%;
-    margin-bottom: 2px;
-}
-
-.ui-combobox > .ui-dropdownmenu > .ui-searchbox {
+.ui-dropdownmenu > .ui-searchbox {
     display: block;
     padding: 0 5px;
     margin-bottom: 5px;
 }
 
-.ui-combobox > .ui-dropdownmenu > .ui-searchbox > input[type=text] {
+.ui-dropdownmenu > .ui-searchbox > input[type=text] {
     display: block;
     width: 100%;
     height: 34px;
@@ -128,7 +109,7 @@
     transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
 }
 
-.ui-combobox > .ui-dropdownmenu > ul.ui-autocomplete {
+.ui-dropdownmenu > ul.ui-autocomplete {
     background: none;
     border: 0;
     display: block !important;
@@ -138,10 +119,10 @@
     position: static;
     width: 100%;
     overflow: auto;
-    max-height: 300px;
+    max-height: 200px;
 }
 
-.ui-combobox > .ui-dropdownmenu > ul.ui-autocomplete > li {
+.ui-dropdownmenu > ul.ui-autocomplete > li {
     background-color: inherit;
     border: 0;
     display: block;
@@ -155,15 +136,15 @@
     white-space: normal;
 }
 
-.ui-combobox > .ui-dropdownmenu > ul.ui-autocomplete > li:focus,
-.ui-combobox > .ui-dropdownmenu > ul.ui-autocomplete > li.ui-state-focus {
+.ui-dropdownmenu > ul.ui-autocomplete > li:focus,
+.ui-dropdownmenu > ul.ui-autocomplete > li.ui-state-focus {
     color: #262626;
     background: none;
     background-color: #f5f5f5;
 }
 
-.ui-combobox > .ui-dropdownmenu > ul.ui-autocomplete > li.ui-autocomplete-loading,
-.ui-combobox > .ui-dropdownmenu > ul.ui-autocomplete > li.ui-autocomplete-info {
+.ui-dropdownmenu > ul.ui-autocomplete > li.ui-autocomplete-loading,
+.ui-dropdownmenu > ul.ui-autocomplete > li.ui-autocomplete-info {
     color: inherit;
     background-color: inherit;
     padding: 3px 10px;
@@ -172,7 +153,7 @@
     font-weight: bold;
 }
 
-.ui-combobox > .ui-dropdown-backdrop {
+.ui-dropdown-backdrop {
     position: fixed;
     top: 0;
     right: 0;
@@ -182,7 +163,13 @@
 }
 
 @media (min-width: 992px) {
-    .ui-combobox > .ui-dropdownmenu {
-        width: auto;
+    .ui-dropdownmenu > ul.ui-autocomplete {
+        max-height: 250px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .ui-dropdownmenu > ul.ui-autocomplete {
+        max-height: 300px;
     }
 }
