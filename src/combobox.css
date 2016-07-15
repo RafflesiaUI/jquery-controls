@@ -1,6 +1,6 @@
 /*
 * Rafflesia UI
-* @version: 1.0.1
+* @version: 1.0.2
 * @author: GSLAI
 * @copyright: Copyright (c) 2016 Rafflesia UI Foundation. All rights reserved.
 * @license: Licensed under the MIT license.
@@ -60,7 +60,7 @@
     width: 1%
 }
 
-.ui-dropdownmenu {
+.ui-combobox-menu {
     position: absolute;
     z-index: 1000;
     display: none;
@@ -80,17 +80,17 @@
     min-width: 160px;
 }
 
-.ui-dropdownmenu.open {
+.ui-combobox-menu.open {
     display: block;
 }
 
-.ui-dropdownmenu > .ui-searchbox {
+.ui-combobox-menu > .ui-searchbox {
     display: block;
     padding: 0 5px;
     margin-bottom: 5px;
 }
 
-.ui-dropdownmenu > .ui-searchbox > input[type=text] {
+.ui-combobox-menu > .ui-searchbox > input[type=text] {
     display: block;
     width: 100%;
     height: 34px;
@@ -99,7 +99,6 @@
     line-height: 1.42857143;
     color: #555;
     background-color: #fff;
-    background-image: none;
     border: 1px solid #ccc;
     border-radius: 4px;
     -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
@@ -109,8 +108,7 @@
     transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
 }
 
-.ui-dropdownmenu > ul.ui-autocomplete {
-    background: none;
+.ui-combobox-menu > ul {
     border: 0;
     display: block !important;
     list-style: none;
@@ -118,58 +116,68 @@
     padding: 0;
     position: static;
     width: 100%;
+    outline: none;
     overflow: auto;
     max-height: 200px;
 }
 
-.ui-dropdownmenu > ul.ui-autocomplete > li {
-    background-color: inherit;
+.ui-combobox-menu > ul > li {
     border: 0;
-    display: block;
-    padding: 3px 20px;
-    position: static;
-    margin: auto;
-    clear: both;
-    font-weight: normal;
-    line-height: 1.42857143;
     color: #333;
-    white-space: normal;
+    cursor: pointer;
+    display: block;
 }
 
-.ui-dropdownmenu > ul.ui-autocomplete > li:focus,
-.ui-dropdownmenu > ul.ui-autocomplete > li.ui-state-focus {
+.ui-combobox-menu > ul > li.ui-state-focus {
     color: #262626;
-    background: none;
     background-color: #f5f5f5;
 }
 
-.ui-dropdownmenu > ul.ui-autocomplete > li.ui-autocomplete-loading,
-.ui-dropdownmenu > ul.ui-autocomplete > li.ui-autocomplete-info {
-    color: inherit;
-    background-color: inherit;
+.ui-combobox-menu > ul > li.ui-state-loading,
+.ui-combobox-menu > ul > li.ui-state-info {
     padding: 3px 10px;
     text-align: center;
     font-size: 12px;
     font-weight: bold;
+    cursor: inherit;
 }
 
-.ui-dropdown-backdrop {
+.ui-combobox-menu > ul > li > a {
+    display: block;
+    padding: 3px 20px;
+    clear: both;
+    font-weight: normal;
+    line-height: 1.42857143;
+    color: #333;
+    text-decoration: none;
+    outline: none;
+}
+
+.ui-combobox-menu > ul > li > a:active,
+.ui-combobox-menu > ul > li > a:focus,
+.ui-combobox-menu > ul > li > a:hover {
+    text-decoration: none;
+    outline: none;
+}
+
+.ui-combobox-backdrop {
     position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
     left: 0;
     z-index: 990;
+    -webkit-overflow-scrolling: touch;
 }
 
 @media (min-width: 992px) {
-    .ui-dropdownmenu > ul.ui-autocomplete {
+    .ui-combobox-menu > ul {
         max-height: 250px;
     }
 }
 
 @media (min-width: 1200px) {
-    .ui-dropdownmenu > ul.ui-autocomplete {
+    .ui-combobox-menu > ul {
         max-height: 300px;
     }
 }

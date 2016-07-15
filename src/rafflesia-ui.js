@@ -19,9 +19,10 @@ String.format = function () {
 }
 
 /* ========================================================================
- * Rafflesia: combobox.js v1.0.1
+ * Rafflesia: combobox.js v1.0.2
  * ======================================================================== */
 $.widget("rafflesia.combobox", {
+    version: "1.0.2",
     options: {
         delay: 300,
         minLength: 1,
@@ -37,9 +38,24 @@ $.widget("rafflesia.combobox", {
     },
 
     pageIndex: -1,
+    pending: 0,
+    requestIndex: 0,
 
     _create: function () {
+        var nodeName = this.element[0].nodeName.toLowerCase();
+        if (nodeName == "select" && !this.options.source) {
+            var options = $(this.element).find("option");
+
+            this.options.source = $.map(options, function (option) {
+                return {
+                    label: option.text,
+                    value: option.value
+                };
+            });
+        }
+
         this._setOptions({
+            "source": this.options.source,
             "paging": this.options.paging
         });
 
@@ -47,15 +63,25 @@ $.widget("rafflesia.combobox", {
 
         this._createComboBox();
         this._createDropDown();
-        this._createAutoComplete();
 
-        this._initSource();
         this._bindEvents();
     },
 
     _createComboBox: function () {
+        var text = this._value();
+        if ($.isArray(this.options.source)) {
+            var selectedItem = $.grep(this.options.source, function (item) {
+                return item["value"] == text;
+            });
+
+            if (selectedItem && selectedItem.length) {
+                text = selectedItem[0]["label"];
+            }
+        }
+
         this.button = $("<button>")
             .attr("type", "button")
+            .attr("title", text)
             .addClass("ui-combobox");
         this.element.after(this.button);
 
@@ -69,7 +95,7 @@ $.widget("rafflesia.combobox", {
             .appendTo(this.button);
 
         this.caption = $("<span>")
-            .text(this._value())
+            .text(text)
             .appendTo(captionPane);
 
         this._resizeCaptionPane();
@@ -77,155 +103,187 @@ $.widget("rafflesia.combobox", {
 
     _createDropDown: function () {
         this.dropdown = $("<div>")
-            .addClass("ui-dropdownmenu")
+            .addClass("ui-combobox-menu")
             .appendTo(this.document[0].body);
 
         this.searchBox = $("<input>")
             .attr("type", "text")
+            .attr("autocomplete", "off")
             .appendTo($("<div>")
             .addClass("ui-searchbox")
             .appendTo(this.dropdown));
+
+        this.dropdownList = $("<ul>")
+            .attr("tabIndex", 0)
+			.appendTo(this.dropdown)
     },
 
-    _createAutoComplete: function () {
-        var self = this;
+    _allowPaging: function () {
+        return (this.options.paging && this.options.paging.pageSize > 0);
+    },
 
-        self.searchBox
-            .autocomplete({
-                appendTo: self.dropdown,
-                delay: self.options.delay,
-                minLength: self.options.minLength,
-                source: self.options.source,
+    _bindEvents: function () {
+        var suppressInput;
 
-                open: function () {
-                    self._positionDropDown();
-                },
-                close: function () {
-                    self.pageIndex = -1;
-
-                    if (this.value.length < self.options.minLength &&
-                        self.options.minLengthMessage.length > 0) {
-                        self._message(String.format(self.options.minLengthMessage, self.options.minLength));
-                    }
-
-                    self._positionDropDown();
-                },
-                focus: function (event, ui) {
-                    return false;
-                },
-                select: function (event, ui) {
-                    if (ui.item.state &&
-                       (ui.item.state == "loading" || ui.item.state == "info")) {
-                        return false;
-                    }
-
-                    self.button.attr("title", ui.item.label);
-                    self.caption.text(ui.item.label);
-                    self._value(ui.item.value);
-                    self.hide();
-                    self.button.focus();
-
-                    self._trigger("change", event, ui);
-
-                    return false;
-                },
-                search: function (event, ui) {
-                    self.pageIndex = 1;
-
-                    self.searchBox.autocomplete("widget").empty();
-                },
-                response: function (event, ui) {
-                    self.searchBox.autocomplete("widget").find(".ui-autocomplete-info, .ui-autocomplete-loading").remove();
-
-                    if (ui.content.length == 0 && self.pageIndex < 2) {
-                        self._message(self.options.noResultsMessage);
-                    }
+        this._on(this.button, {
+            click: function () {
+                if (this.dropdown.hasClass("open")) {
+                    this.hide();
+                } else {
+                    this.show();
                 }
-            });
 
-        self.searchBox.autocomplete("instance")._normalize = function (items) {
-            if (typeof self.options.normalizeDataItems === "function") {
-                return self.options.normalizeDataItems(items);
+                return false;
             }
+        });
 
-            if (items.length && items[0]["label"] && items[0]["value"]) {
-                return items;
-            }
-            return $.map(items, function (item) {
-                if (typeof item === "string") {
-                    return {
-                        label: item,
-                        value: item
-                    };
-                }
-                return $.extend({}, item, {
-                    label: item["label"] || item["value"],
-                    value: item["value"] || item["label"]
-                });
-            });
-        };
+        this._on(window, {
+            resize: function () {
+                this._resizeCaptionPane();
 
-        self.searchBox.autocomplete("instance")._renderItem = function (ul, item) {
-            if (typeof self.options.renderDataItem === "function") {
-                return self.options.renderDataItem(ul, item);
-            }
-
-            return $("<li>").text(item.label).appendTo(ul);
-        };
-
-        self.searchBox.autocomplete("instance")._search = function (value) {
-            var that = this;
-
-            that.pending++;
-            that.cancelSearch = false;
-
-            // append spinner
-            that.menu.element.find(".ui-autocomplete-info, .ui-autocomplete-loading").remove();
-            $("<li>")
-                .addClass("ui-autocomplete-loading")
-                .data("ui-autocomplete-item", { value: null, state: "loading" })
-                .html(self.options.loadingMessage)
-                .appendTo(that.menu.element);
-
-            var request = { term: value };
-            if (self._allowPaging()) {
-
-                request = $.extend({
-                    skip: (self.pageIndex - 1) * self.options.paging.pageSize,
-                    take: self.options.paging.pageSize
-                }, request);
-            }
-            self.source(request, that._response());
-        };
-
-        self.searchBox.autocomplete("instance")._suggest = function (items) {
-            var that = this,
-                ul = that.menu.element;
-
-            if (self._allowPaging()) {
-                if (items.length === 0 ||
-                    items.length < self.options.paging.pageSize) {
-                    self.pageIndex = -1;
-                }
-                else {
-                    self.pageIndex++;
+                if (this.dropdown.hasClass("open")) {
+                    this._resizeDropDown();
+                    this._positionDropDown();
                 }
             }
-            else {
-                ul.empty();
+        });
+
+        this._on(this.searchBox, {
+            keydown: function (event) {
+                suppressInput = false;
+
+                var keyCode = $.ui.keyCode;
+                switch (event.keyCode) {
+                    case keyCode.PAGE_DOWN:
+                    case keyCode.DOWN:
+                    case keyCode.RIGHT:
+                    case keyCode.TAB:
+                        this._focus();
+                        event.preventDefault();
+                        break;
+
+                    case keyCode.ESCAPE:
+                        this.hide();
+                        this.button.focus();
+                        break;
+
+                    case keyCode.ENTER:
+                        this._searchTimeout(event, 0);
+                        break;
+
+                    default:
+                        this._searchTimeout(event, this.options.delay);
+                        break;
+                }
+            },
+            input: function (event) {
+                if (suppressInput) {
+                    suppressInput = false;
+                    event.preventDefault();
+                    return;
+                }
+                this._searchTimeout(event, this.options.delay);
             }
+        });
 
-            that._renderMenu(ul, items);
-            that.isNewMenu = true;
-            that.menu.refresh();
+        this._on(this.dropdownList, {
+            "mousedown li": function (event) {
+                event.preventDefault();
+            },
+            "mouseenter li:not(.ui-state-loading, .ui-state-info)": function (event) {
+                var target = $(event.target).closest("li");
+                this._focus(target);
+                event.preventDefault();
+            },
+            "focus li:not(.ui-state-loading, .ui-state-info)": function (event) {
+                var target = $(event.target).closest("li");
+                this._focus(target);
+                event.preventDefault();
+            },
+            "click li:not(.ui-state-loading, .ui-state-info)": function (event) {
+                var target = $(event.target).closest("li"),
+                    item = target.data("ui-combobox-item");
 
-            ul.show();
-        };
+                this._change(event, { item: item });
+                event.preventDefault();
+            },
+            "keydown li:not(.ui-state-loading, .ui-state-info)": function (event) {
+                var keyCode = $.ui.keyCode;
+                switch (event.keyCode) {
+                    case keyCode.PAGE_UP:
+                    case keyCode.UP:
+                    case keyCode.LEFT:
+                        this._move("prev");
+                        event.preventDefault();
+                        break;
+
+                    case keyCode.PAGE_DOWN:
+                    case keyCode.DOWN:
+                    case keyCode.RIGHT:
+                        this._move("next");
+                        event.preventDefault();
+                        break;
+                }
+            },
+            scroll: function (event) {
+                if (this.pending || !this._allowPaging()) {
+                    return;
+                }
+
+                var target = $(event.currentTarget),
+                    scrollHeight = target[0].scrollHeight,
+                    scrollTop = target.scrollTop(),
+                    outerHeight = target.outerHeight();
+
+                if (this.pageIndex > 0 &&
+                    scrollTop > 0 &&
+                    scrollHeight - scrollTop == outerHeight) {
+                    this._search(this.term);
+                }
+            },
+            keydown: function (event) {
+                var keyCode = $.ui.keyCode;
+                switch (event.keyCode) {
+                    case keyCode.TAB:
+                        event.preventDefault();
+
+                    case keyCode.ESCAPE:
+                        this.hide();
+                        this.button.focus();
+                        break;
+
+                    case keyCode.ENTER:
+                        var target = $(event.target).closest("li"),
+                            item = target.data("ui-combobox-item");
+                        if (target.not(".ui-state-loading, .ui-state-info")) {
+                            event.preventDefault();
+                            this._change(event, { item: item });
+                        }
+                        break;
+                }
+            }
+        });
+    },
+
+    _clearList: function () {
+        this.dropdownList.empty()
+    },
+
+    _change: function (event, ui) {
+        this.button.attr("title", ui.item.label);
+        this.caption.text(ui.item.label);
+        this._value(ui.item.value);
+
+        this._trigger("change", event, ui);
+
+        this.hide();
+        this.button.focus();
     },
 
     _destroy: function () {
-        this.searchBox.autocomplete("destroy");
+        clearTimeout(this.searching);
 
+        this.dropdownList.remove();
         this.searchBox.remove();
         this.dropdown.remove();
         this.caption.remove();
@@ -235,54 +293,112 @@ $.widget("rafflesia.combobox", {
         this.element.show();
     },
 
-    _bindEvents: function () {
-        var self = this;
-
-        self._on(self.button, {
-            click: function () {
-                if (self.dropdown.hasClass("open")) {
-                    self.hide();
-                } else {
-                    self.show();
-                }
-
-                return false;
+    _focus: function (target) {
+        if (target && target.length) {
+            if (!target.hasClass("ui-state-focus")) {
+                this.dropdownList.find(".ui-state-focus").removeClass("ui-state-focus");
+                target.addClass("ui-state-focus");
+                target.find("a").focus();
             }
-        });
+            return;
+        }
 
-        self._on(window, {
-            resize: function () {
-                self._resizeCaptionPane();
+        var active = this.dropdownList.find(".ui-state-focus");
+        if (active && active.length) {
+            active.find("a").focus();
+            return;
+        }
 
-                if (self.dropdown.hasClass("open")) {
-                    self._resizeDropDown();
-                    self._positionDropDown();
+        target = this.dropdownList.find("li:not(.ui-state-loading, .ui-state-info)").first();
+        target.addClass("ui-state-focus");
+        target.find("a").focus();
+    },
+
+    _initSource: function () {
+        var array, url,
+			self = this;
+
+        if ($.isArray(this.options.source)) {
+            array = this.options.source;
+            this.source = function (request, response) {
+                var data = $.ui.autocomplete.filter(array, request.term);
+                if (self._allowPaging()) {
+                    data = data.slice(request.skip, request.skip + request.take);
                 }
-            }
-        });
-
-        self._on(self.searchBox.autocomplete("widget"), {
-            scroll: function (event) {
-                if (!self._allowPaging()) {
-                    return;
+                response(data);
+            };
+        } else if (typeof this.options.source === "string") {
+            url = this.options.source;
+            this.source = function (request, response) {
+                if (self.xhr) {
+                    self.xhr.abort();
                 }
-
-                var elem = $(event.currentTarget),
-                    scrollHeight = elem[0].scrollHeight,
-                    scrollTop = elem.scrollTop(),
-                    outerHeight = elem.outerHeight();
-
-                if (self.pageIndex > 0 &&
-                    scrollTop > 0 &&
-                    scrollHeight - scrollTop == outerHeight) {
-                    if (self.searchBox.autocomplete("widget").find(".ui-autocomplete-loading").length > 0) {
-                        return;
+                self.xhr = $.ajax({
+                    async: true,
+                    url: url,
+                    data: request,
+                    dataType: "json",
+                    success: function (data) {
+                        response(data);
+                    },
+                    error: function () {
+                        response([]);
                     }
+                });
+            };
+        } else {
+            this.source = this.options.source;
+        }
+    },
 
-                    var term = self.searchBox.autocomplete("instance").term;
-                    self.searchBox.autocomplete("instance")._search(term);
-                }
+    _message: function (message, params) {
+        this._clearList();
+
+        $("<li>")
+            .addClass("ui-state-info")
+            .html(String.format(message, params))
+            .appendTo(this.dropdownList);
+    },
+
+    _move: function (direction) {
+        var target;
+
+        var active = this.dropdownList.find(".ui-state-focus");
+        if (active && active.length) {
+            switch (direction) {
+                case "next":
+                    target = active.next(":not(.ui-state-loading, .ui-state-info)");
+                    break;
+                case "prev":
+                    target = active.prev(":not(.ui-state-loading, .ui-state-info)");
+                    break;
             }
+        }
+
+        if (target && target.length) {
+            this._focus(target);
+        }
+    },
+
+    _normalize: function (items) {
+        if (typeof this.options.normalizeDataItems === "function") {
+            return this.options.normalizeDataItems(items);
+        }
+
+        if (items.length && items[0]["label"] && items[0]["value"]) {
+            return items;
+        }
+        return $.map(items, function (item) {
+            if (typeof item === "string") {
+                return {
+                    label: item,
+                    value: item
+                };
+            }
+            return $.extend({}, item, {
+                label: item["label"] || item["value"],
+                value: item["value"] || item["label"]
+            });
         });
     },
 
@@ -343,6 +459,32 @@ $.widget("rafflesia.combobox", {
             });
     },
 
+    _renderMenu: function (ul, items) {
+        var self = this;
+        $.each(items, function (index, item) {
+            self._renderItemData(ul, item);
+        });
+    },
+
+    _renderItemData: function (ul, item) {
+        return this._renderItem(ul, item)
+            .data("ui-combobox-item", item);
+    },
+
+    _renderItem: function (ul, item) {
+        if (typeof this.options.renderDataItem === "function") {
+            return this.options.renderDataItem(ul, item);
+        }
+
+        return $("<li>").append($("<a>").attr("href", "#").text(item.label)).appendTo(ul);
+    },
+
+    _resetTerm: function () {
+        this.term = null;
+        this._clearList();
+        this.searchBox.val("");
+    },
+
     _resizeCaptionPane: function () {
         var captionPane = $(this.button).find('.ui-captionpane');
 
@@ -358,51 +500,71 @@ $.widget("rafflesia.combobox", {
         this.dropdown.outerWidth(parentWidth);
     },
 
-    _resetTerm: function () {
-        this.searchBox
-            .autocomplete("close")
-            .autocomplete("instance").term = null;
+    _response: function () {
+        var index = ++this.requestIndex;
 
-        this.searchBox.autocomplete("widget").empty();
+        return $.proxy(function (content) {
+            if (index === this.requestIndex) {
+                this.__response(content);
+            }
 
-        this.searchBox.val("");
+            this.pending--;
+            if (!this.pending) {
+                this.dropdownList.find(".ui-state-loading").remove();
+            }
+        }, this);
     },
 
-    _initSource: function () {
-        var array, url,
-			self = this;
-
-        if ($.isArray(this.options.source)) {
-            array = this.options.source;
-            this.source = function (request, response) {
-                var data = $.ui.autocomplete.filter(array, request.term);
-                if (self._allowPaging()) {
-                    data = data.slice(request.skip, request.take);
-                }
-                response(data);
-            };
-        } else if (typeof this.options.source === "string") {
-            url = this.options.source;
-            this.source = function (request, response) {
-                if (self.xhr) {
-                    self.xhr.abort();
-                }
-                self.xhr = $.ajax({
-                    async: true,
-                    url: url,
-                    data: request,
-                    dataType: "json",
-                    success: function (data) {
-                        response(data);
-                    },
-                    error: function () {
-                        response([]);
-                    }
-                });
-            };
-        } else {
-            this.source = this.options.source;
+    __response: function (content) {
+        if (content) {
+            content = this._normalize(content);
         }
+
+        this._trigger("response", null, { content: content });
+
+        this.dropdownList.find(".ui-state-info, .ui-state-loading").remove();
+
+        if (this.cancelSearch) {
+            return;
+        }
+
+        if (content && content.length) {
+            this._suggest(content);
+        } else if (this.pageIndex <= 1) {
+            this._message(this.options.noResultsMessage);
+        }
+        this._positionDropDown();
+    },
+
+    _search: function (value) {
+        this.pending++;
+        this.cancelSearch = false;
+
+        this._spinner();
+        this._positionDropDown();
+
+        var request = { term: value };
+        if (this._allowPaging()) {
+            request = $.extend({
+                skip: (this.pageIndex - 1) * this.options.paging.pageSize,
+                take: this.options.paging.pageSize
+            }, request);
+        }
+        this.source(request, this._response());
+    },
+
+    _searchTimeout: function (event, delay) {
+        clearTimeout(this.searching);
+
+        this.searching = this._delay(function () {
+            var equalValues = this.term === this.searchBox.val(),
+				dropdownVisible = this.dropdown.hasClass("open"),
+				modifierKey = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
+
+            if (!equalValues || (equalValues && !dropdownVisible && !modifierKey)) {
+                this.search(null, event);
+            }
+        }, delay);
     },
 
     _setOption: function (key, value) {
@@ -429,13 +591,29 @@ $.widget("rafflesia.combobox", {
         }
     },
 
-    _message: function (message) {
-        this.searchBox.autocomplete("widget")
-            .empty()
-            .append($("<li>")
-            .addClass("ui-autocomplete-info")
-            .data("ui-autocomplete-item", { value: null, state: "info" })
-            .html(message));
+    _spinner: function () {
+        this.dropdownList.find(".ui-state-info, .ui-state-loading")
+            .remove();
+
+        $("<li>")
+            .addClass("ui-state-loading")
+            .html(this.options.loadingMessage)
+            .appendTo(this.dropdownList);
+    },
+
+    _suggest: function (items) {
+        if (this._allowPaging()) {
+            if (items.length === 0 ||
+                items.length < this.options.paging.pageSize) {
+                this.pageIndex = -1;
+            } else {
+                this.pageIndex++;
+            }
+        } else {
+            this._clearList();
+        }
+
+        this._renderMenu(this.dropdownList, items);
     },
 
     _value: function (value) {
@@ -447,8 +625,27 @@ $.widget("rafflesia.combobox", {
         return this.element.val();
     },
 
-    _allowPaging: function () {
-        return (this.options.paging && this.options.paging.pageSize > 0);
+    search: function (value, event) {
+        value = value != null ? value : this.searchBox.val();
+
+        this.term = this.searchBox.val();
+
+        if (value.length < this.options.minLength) {
+            this.cancelSearch = true;
+
+            this._message(this.options.minLengthMessage, this.options.minLength);
+            this._positionDropDown();
+            return;
+        }
+
+        if (this._trigger("search", event) === false) {
+            return;
+        }
+
+        this.pageIndex = 1;
+        this._clearList();
+
+        return this._search(value);
     },
 
     show: function () {
@@ -467,19 +664,15 @@ $.widget("rafflesia.combobox", {
             self.hide();
         };
 
-        // Bind global combobox mousedown for hiding and
         $(document)
           .on("mousedown.combobox", lostfocusMethod)
-           // also support mobile devices
           .on("touchend.combobox", lostfocusMethod)
-           // also explicitly play nice with Bootstrap dropdowns, which stopPropagation when clicking them
           .on("click.combobox", "[data-toggle=dropdown]", lostfocusMethod)
-           // and also close when focus changes to outside the picker (eg. tabbing between controls)
           .on("focusin.combobox", lostfocusMethod);
 
         if ('ontouchstart' in document.documentElement) {
             self.backdrop = $('<div>')
-                .addClass("ui-dropdown-backdrop")
+                .addClass("ui-combobox-backdrop")
                 .insertAfter(self.button)
                 .on("click", function () {
                     self.hide();
@@ -492,9 +685,9 @@ $.widget("rafflesia.combobox", {
         self._resizeDropDown();
         if (self.options.minLength <= 0) {
             self._positionDropDown();
-            self.searchBox.autocomplete("search", "");
+            self.search("");
         } else {
-            self._message(String.format(self.options.minLengthMessage, self.options.minLength));
+            self._message(self.options.minLengthMessage, self.options.minLength);
             self._positionDropDown();
         }
 
@@ -518,6 +711,7 @@ $.widget("rafflesia.combobox", {
                 this.backdrop = null;
             }
 
+            this.cancelSearch = true;
             this.dropdown.removeClass("open");
             this.button.attr("aria-expanded", "false");
             this._trigger("hidden");
