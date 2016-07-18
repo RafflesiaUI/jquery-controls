@@ -19,12 +19,13 @@ String.format = function () {
 }
 
 /* ========================================================================
- * Rafflesia: combobox.js v1.0.2
+ * Rafflesia: combobox.js v1.0.3
  * ======================================================================== */
 $.widget("rafflesia.combobox", {
-    version: "1.0.2",
+    version: "1.0.3",
     options: {
         delay: 300,
+        disabled: false,
         minLength: 1,
         source: null,
         paging: { pageSize: 15 },
@@ -54,10 +55,7 @@ $.widget("rafflesia.combobox", {
             });
         }
 
-        this._setOptions({
-            "source": this.options.source,
-            "paging": this.options.paging
-        });
+        this._setOptions({ "source": this.options.source });
 
         this.element.hide();
 
@@ -65,23 +63,34 @@ $.widget("rafflesia.combobox", {
         this._createDropDown();
 
         this._bindEvents();
+
+        this._setOptions({
+            "disabled": this.options.disabled,
+            "paging": this.options.paging
+        });
     },
 
     _createComboBox: function () {
-        var text = this._value();
-        if ($.isArray(this.options.source)) {
-            var selectedItem = $.grep(this.options.source, function (item) {
-                return item["value"] == text;
-            });
+        var value = this._value(),
+            label = value;
 
-            if (selectedItem && selectedItem.length) {
-                text = selectedItem[0]["label"];
+        if (value && value.length) {
+            if ($.isArray(this.options.source)) {
+                var selectedItem = $.grep(this.options.source, function (item) {
+                    return item["value"] == value;
+                });
+
+                if (selectedItem && selectedItem.length) {
+                    label = selectedItem[0]["label"];
+                }
             }
+        } else {
+            label = this._placeholder();
         }
 
         this.button = $("<button>")
             .attr("type", "button")
-            .attr("title", text)
+            .attr("title", label)
             .addClass("ui-combobox");
         this.element.after(this.button);
 
@@ -95,7 +104,8 @@ $.widget("rafflesia.combobox", {
             .appendTo(this.button);
 
         this.caption = $("<span>")
-            .text(text)
+            .addClass(value && value.length ? "" : "ui-placeholder")
+            .text(label)
             .appendTo(captionPane);
 
         this._resizeCaptionPane();
@@ -237,7 +247,7 @@ $.widget("rafflesia.combobox", {
 
                 if (this.pageIndex > 0 &&
                     scrollTop > 0 &&
-                    scrollHeight - scrollTop == outerHeight) {
+                    scrollHeight - scrollTop > outerHeight - 25) {
                     this._search(this.term);
                 }
             },
@@ -270,14 +280,34 @@ $.widget("rafflesia.combobox", {
     },
 
     _change: function (event, ui) {
-        this.button.attr("title", ui.item.label);
-        this.caption.text(ui.item.label);
-        this._value(ui.item.value);
+        var previous = this._value(),
+            value = ui.item.value;
 
-        this._trigger("change", event, ui);
+        if (value && value.length) {
+            var label = ui.item.label;
+
+            this.button.attr("title", label);
+            this.caption
+                .removeClass("ui-placeholder")
+                .text(label);
+            this._value(value);
+
+        } else {
+            var placeholder = this._placeholder();
+
+            this.button.attr("title", placeholder);
+            this.caption
+                .addClass("ui-placeholder")
+                .text(placeholder);
+            this._value("");
+        }
 
         this.hide();
         this.button.focus();
+
+        if (value !== previous) {
+            this._trigger("change", event, ui);
+        }
     },
 
     _destroy: function () {
@@ -402,6 +432,10 @@ $.widget("rafflesia.combobox", {
         });
     },
 
+    _placeholder: function () {
+        return this.element.attr("placeholder");
+    },
+
     _positionDropDown: function () {
         var parent = this.button,
             parentSize = {
@@ -524,7 +558,7 @@ $.widget("rafflesia.combobox", {
 
         this.dropdownList.find(".ui-state-info, .ui-state-loading").remove();
 
-        if (this.cancelSearch) {
+        if (this.options.disabled || this.cancelSearch) {
             return;
         }
 
@@ -571,9 +605,16 @@ $.widget("rafflesia.combobox", {
         this._super(key, value);
 
         switch (key) {
-            case "delay":
-            case "minLength":
-                this.searchBox.autocomplete("option", key, value);
+            case "disabled":
+                if (value && this.xhr) {
+                    this.xhr.abort();
+                }
+
+                if (value) {
+                    this.button.attr("disabled", true);
+                } else {
+                    this.button.removeAttr("disabled");
+                }
                 break;
 
             case "source":
@@ -651,7 +692,7 @@ $.widget("rafflesia.combobox", {
     show: function () {
         var self = this;
 
-        if (self.dropdown.hasClass("open")) {
+        if (this.options.disabled || this.dropdown.hasClass("open")) {
             return;
         }
 
@@ -671,33 +712,31 @@ $.widget("rafflesia.combobox", {
           .on("focusin.combobox", lostfocusMethod);
 
         if ('ontouchstart' in document.documentElement) {
-            self.backdrop = $('<div>')
+            this.backdrop = $('<div>')
                 .addClass("ui-combobox-backdrop")
-                .insertAfter(self.button)
+                .insertAfter(this.button)
                 .on("click", function () {
                     self.hide();
                 });
         }
 
-        self._trigger("show");
+        this._trigger("show");
+        this._resetTerm();
+        this._resizeDropDown();
 
-        self._resetTerm();
-        self._resizeDropDown();
-        if (self.options.minLength <= 0) {
-            self._positionDropDown();
-            self.search("");
+        if (this.options.minLength <= 0) {
+            this._positionDropDown();
+            this.search("");
         } else {
-            self._message(self.options.minLengthMessage, self.options.minLength);
-            self._positionDropDown();
+            this._message(self.options.minLengthMessage, self.options.minLength);
+            this._positionDropDown();
         }
 
-        self.dropdown.addClass("open");
-        self.button.attr("aria-expanded", "true");
-        self.searchBox.focus();
-
-        self._resizeCaptionPane();
-
-        self._trigger("shown");
+        this.dropdown.addClass("open");
+        this.button.attr("aria-expanded", "true");
+        this.searchBox.focus();
+        this._resizeCaptionPane();
+        this._trigger("shown");
     },
 
     hide: function () {
