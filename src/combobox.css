@@ -1,6 +1,6 @@
 /*
 * Rafflesia UI
-* @version: 1.0.3
+* @version: 1.0.4
 * @author: GSLAI
 * @copyright: Copyright (c) 2016 Rafflesia UI Foundation. All rights reserved.
 * @license: Licensed under the MIT license.
@@ -42,6 +42,7 @@
 }
 
 .ui-combobox > .ui-captionpane,
+.ui-combobox > .ui-clearbutton,
 .ui-combobox > .ui-togglebutton {
     display: table-cell;
     margin: 0;
@@ -69,9 +70,42 @@
     opacity: 1;
 }
 
+.ui-combobox > .ui-clearbutton,
 .ui-combobox > .ui-togglebutton {
     padding-left: 10px;
     width: 1%
+}
+
+.ui-combobox > .ui-clearbutton {
+    display: none;
+}
+
+.ui-combobox > .ui-clearbutton.display {
+    display: table-cell !important;
+}
+
+.ui-combobox > .ui-clearbutton > a {
+    background: 0 0;
+    border: 0;
+    cursor: pointer;
+    display: inline-block;
+    float: left;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 0;
+    line-height: 1;
+    color: #000;
+    text-decoration: none;
+    text-shadow: 0 1px 0 #fff;
+    filter: alpha(opacity=20);
+    opacity: .2;
+    -webkit-appearance: none;
+}
+
+.ui-combobox > .ui-clearbutton > a:hover,
+.ui-combobox > .ui-clearbutton > a:focus {
+    filter: alpha(opacity=50);
+    opacity: .5;
 }
 
 .ui-combobox-menu {
