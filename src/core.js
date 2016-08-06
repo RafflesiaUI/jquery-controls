@@ -1,10 +1,43 @@
 /*
 * Rafflesia UI
-* @version: 1.0.0
+* @version: 1.0.1
 * @author: GSLAI
 * @copyright: Copyright (c) 2016 Rafflesia UI Foundation. All rights reserved.
 * @license: Licensed under the MIT license.
 */
+
+$.rafflesia = $.rafflesia || {};
+
+$.extend($.rafflesia, {
+    version: "1.0.1",
+
+    keyCode: {
+        ALT: 18,
+        BACKSPACE: 8,
+        CAPSLOCK: 20,
+        COMMA: 188,
+        CTRL: 17,
+        DELETE: 46,
+        DOWN: 40,
+        END: 35,
+        ENTER: 13,
+        ESCAPE: 27,
+        HOME: 36,
+        INSERT: 45,
+        LEFT: 37,
+        NUMLOCK: 144,
+        PAGE_DOWN: 34,
+        PAGE_UP: 33,
+        PAUSE: 19,
+        PERIOD: 190,
+        RIGHT: 39,
+        SCROLLLOCK: 145,
+        SHIFT: 16,
+        SPACE: 32,
+        TAB: 9,
+        UP: 38
+    }
+});
 
 String.format = function () {
     var s = arguments[0];
