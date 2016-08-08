@@ -1,6 +1,6 @@
 /*
 * Rafflesia UI
-* @version: 1.0.4
+* @version: 1.0.5
 * @author: GSLAI
 * @copyright: Copyright (c) 2016 Rafflesia UI Foundation. All rights reserved.
 * @license: Licensed under the MIT license.
@@ -190,21 +190,14 @@
     cursor: inherit;
 }
 
-.ui-combobox-menu > ul > li > a {
+.ui-combobox-menu > ul > li > p {
     display: block;
+    margin: 0;
     padding: 3px 20px;
     clear: both;
     font-weight: normal;
     line-height: 1.42857143;
     color: #333;
-    text-decoration: none;
-    outline: none;
-}
-
-.ui-combobox-menu > ul > li > a:active,
-.ui-combobox-menu > ul > li > a:focus,
-.ui-combobox-menu > ul > li > a:hover {
-    text-decoration: none;
     outline: none;
 }
 
