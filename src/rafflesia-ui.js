@@ -189,10 +189,10 @@ $.widget("rafflesia.ajaxPanel", {
 });
 
 /* ========================================================================
- * Rafflesia: combobox.js v1.0.5
+ * Rafflesia: combobox.js v1.0.6
  * ======================================================================== */
 $.widget("rafflesia.combobox", {
-    version: "1.0.5",
+    version: "1.0.6",
     options: {
         enableClear: false,
         delay: 300,
@@ -233,27 +233,13 @@ $.widget("rafflesia.combobox", {
             "source": this.options.source
         });
 
-        var value = this._value(),
-            label = value;
-
+        var value = this._value();
         if (value && value.length) {
-            if ($.isArray(this.options.source)) {
-                var selectedItem = $.grep(this.options.source, function (item) {
-                    return item["value"] == value;
-                });
-
-                if (selectedItem && selectedItem.length) {
-                    label = selectedItem[0]["label"];
-                }
-            }
+            var label = this._getLabelFromArray(value);
+            this._label(label);
         } else {
-            label = this._placeholder();
+            this._label();
         }
-
-        this.button.attr("title", label);
-        this.caption
-            .addClass(value && value.length ? "" : "ui-placeholder")
-            .text(label);
 
         this._resizeCaptionPane();
     },
@@ -378,6 +364,16 @@ $.widget("rafflesia.combobox", {
                 this._clear();
 
                 return false;
+            },
+            keydown: function (event) {
+                var keyCode = $.rafflesia.keyCode;
+                switch (event.keyCode) {
+                    case keyCode.ENTER:
+                        this.hide();
+                        this._clear();
+                        return false;
+                        break;
+                }
             }
         });
 
@@ -542,27 +538,10 @@ $.widget("rafflesia.combobox", {
             value = ui.item.value;
 
         if (value && value.length) {
-            var label = ui.item.label;
-
-            this.button.attr("title", label);
-            this.caption
-                .removeClass("ui-placeholder")
-                .text(label);
-
-            if (this._allowClear()) {
-                this.clearButton.addClass("display");
-            }
-
+            this._label(ui.item.label);
             this._value(value);
-
         } else {
-            var placeholder = this._placeholder();
-
-            this.button.attr("title", "");
-            this.caption
-                .addClass("ui-placeholder")
-                .text(placeholder);
-            this.clearButton.removeClass("display");
+            this._label();
             this._value("");
         }
 
@@ -607,6 +586,31 @@ $.widget("rafflesia.combobox", {
         target = this.dropdownList.find("li:not(.ui-state-loading, .ui-state-info)").first();
         target.addClass("ui-state-focus");
         target.focus();
+    },
+
+    _getLabelFromArray: function (value) {
+        if (value && value.length) {
+            if ($.isArray(this.options.source)) {
+                var selectedItem = $.grep(this.options.source, function (item) {
+                    return item["value"] == value;
+                });
+
+                if (selectedItem && selectedItem.length) {
+                    return selectedItem[0]["label"];
+                }
+            }
+        }
+        return value;
+    },
+
+    _getSelectItems: function () {
+        var options = $(this.element).find("option");
+        return $.map(options, function (option) {
+            return {
+                label: option.text,
+                value: option.value
+            };
+        });
     },
 
     _initSource: function () {
@@ -660,14 +664,23 @@ $.widget("rafflesia.combobox", {
         return (this.element[0].nodeName.toLowerCase() == "select");
     },
 
-    _getSelectItems: function () {
-        var options = $(this.element).find("option");
-        return $.map(options, function (option) {
-            return {
-                label: option.text,
-                value: option.value
-            };
-        });
+    _label: function (label) {
+        this.button.attr("title", "");
+        this.caption
+            .addClass("ui-placeholder")
+            .text(this._placeholder());
+        this.clearButton.removeClass("display");
+
+        if (label && label.length) {
+            this.button.attr("title", label);
+            this.caption
+                .removeClass("ui-placeholder")
+                .text(label);
+
+            if (this._allowClear()) {
+                this.clearButton.addClass("display");
+            }
+        }
     },
 
     _message: function (message, params) {
@@ -1093,6 +1106,30 @@ $.widget("rafflesia.combobox", {
         }
 
         this._resizeCaptionPane();
+    },
+
+    value: function (value) {
+        if (!value) {
+            // Get
+            return this._value();
+        }
+
+        // Set
+        var previous = this._value(),
+            label = null;
+
+        if (value.length) {
+            label = this._getLabelFromArray(value);
+            this._label(label);
+        } else {
+            this._label();
+        }
+
+        this._resizeCaptionPane();
+
+        if (value !== previous) {
+            this._trigger("change", null, { item: { label: label, value: value } });
+        }
     }
 });
 
