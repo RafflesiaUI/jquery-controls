@@ -179,6 +179,16 @@ $.widget("rafflesia.combobox", {
                 this._clear();
 
                 return false;
+            },
+            keydown: function (event) {
+                var keyCode = $.rafflesia.keyCode;
+                switch (event.keyCode) {
+                    case keyCode.ENTER:
+                        this.hide();
+                        this._clear();
+                        return false;
+                        break;
+                }
             }
         });
 
