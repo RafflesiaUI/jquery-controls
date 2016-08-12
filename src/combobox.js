@@ -1,13 +1,13 @@
 /*
 * Rafflesia UI
-* @version: 1.0.6
+* @version: 1.0.7
 * @author: GSLAI
 * @copyright: Copyright (c) 2016 Rafflesia UI Foundation. All rights reserved.
 * @license: Licensed under the MIT license.
 */
 
 $.widget("rafflesia.combobox", {
-    version: "1.0.6",
+    version: "1.0.7",
     options: {
         enableClear: false,
         delay: 300,
@@ -351,6 +351,12 @@ $.widget("rafflesia.combobox", {
     _change: function (event, ui) {
         var previous = this._value(),
             value = ui.item.value;
+
+        if (value !== previous) {
+            if (this._trigger("changing", event, ui) === false) {
+                return;
+            }
+        }
 
         if (value && value.length) {
             this._label(ui.item.label);
@@ -930,20 +936,20 @@ $.widget("rafflesia.combobox", {
         }
 
         // Set
-        var previous = this._value(),
-            label = null;
-
-        if (value.length) {
-            label = this._getLabelFromArray(value);
-            this._label(label);
-        } else {
-            this._label();
-        }
-
-        this._resizeCaptionPane();
-
+        var previous = this._value();
         if (value !== previous) {
-            this._trigger("change", null, { item: { label: label, value: value } });
+            var label = (value.length) ? this._getLabelFromArray(value) : null,
+                item = { item: { label: label, value: value } };
+
+            if (this._trigger("changing", null, item) === false) {
+                return;
+            }
+
+            this._value(value);
+            this._label(label);
+            this._resizeCaptionPane();
+
+            this._trigger("change", null, item);
         }
     }
 });
