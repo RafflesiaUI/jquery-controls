@@ -732,8 +732,6 @@ $.widget("rafflesia.combobox", {
                 case "prev":
                     target = active.prev(":not(.ui-state-loading, .ui-state-info)");
                     break;
-                case "first":
-                    break;
             }
         }
 
@@ -958,6 +956,7 @@ $.widget("rafflesia.combobox", {
                 }
                 this._super(key, value);
                 break;
+
             case "enableSearch":
                 var div = $("div.ui-searchbox", this.dropdown);
                 if (value) {
@@ -989,7 +988,6 @@ $.widget("rafflesia.combobox", {
                 }
 
                 this._initSource();
-                this._super(key, value);
                 break;
 
             case "paging":
