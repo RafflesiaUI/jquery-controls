@@ -6,12 +6,12 @@
 */
 
 /* ========================================================================
- * Rafflesia: core.js v1.0.1
+ * Rafflesia: core.js v1.0.2
  * ======================================================================== */
 $.rafflesia = $.rafflesia || {};
 
 $.extend($.rafflesia, {
-    version: "1.0.1",
+    version: "1.0.2",
 
     keyCode: {
         ALT: 18,
@@ -38,6 +38,20 @@ $.extend($.rafflesia, {
         SPACE: 32,
         TAB: 9,
         UP: 38
+    }
+});
+
+var $focusFn = $.fn.focus;
+$.fn.extend({
+    focus: function () {
+        var element = $(this);
+
+        if (element.data("rafflesiaCombobox")) {
+            element.combobox("focus");
+            return;
+        }
+
+        return $focusFn.apply(this, arguments);
     }
 });
 
@@ -189,12 +203,13 @@ $.widget("rafflesia.ajaxPanel", {
 });
 
 /* ========================================================================
- * Rafflesia: combobox.js v1.0.6
+ * Rafflesia: combobox.js v1.0.7
  * ======================================================================== */
 $.widget("rafflesia.combobox", {
-    version: "1.0.6",
+    version: "1.0.7",
     options: {
         enableClear: false,
+        enableSearch: true,
         delay: 300,
         disabled: false,
         minLength: 1,
@@ -228,6 +243,7 @@ $.widget("rafflesia.combobox", {
 
         this._setOptions({
             "enableClear": this.options.enableClear,
+            "enableSearch": this.options.enableSearch,
             "disabled": this.options.disabled,
             "paging": this.options.paging,
             "source": this.options.source
@@ -537,6 +553,12 @@ $.widget("rafflesia.combobox", {
         var previous = this._value(),
             value = ui.item.value;
 
+        if (value !== previous) {
+            if (this._trigger("changing", event, ui) === false) {
+                return;
+            }
+        }
+
         if (value && value.length) {
             this._label(ui.item.label);
             this._value(value);
@@ -695,6 +717,12 @@ $.widget("rafflesia.combobox", {
     _move: function (direction) {
         var target;
 
+        if (direction == "first") {
+            target = this.dropdownList.children().first();
+            this._focus(target);
+            return;
+        }
+
         var active = this.dropdownList.find(".ui-state-focus");
         if (active && active.length) {
             switch (direction) {
@@ -703,6 +731,8 @@ $.widget("rafflesia.combobox", {
                     break;
                 case "prev":
                     target = active.prev(":not(.ui-state-loading, .ui-state-info)");
+                    break;
+                case "first":
                     break;
             }
         }
@@ -928,6 +958,16 @@ $.widget("rafflesia.combobox", {
                 }
                 this._super(key, value);
                 break;
+            case "enableSearch":
+                var div = $("div.ui-searchbox", this.dropdown);
+                if (value) {
+                    div.show();
+                } else {
+                    div.hide();
+                }
+
+                this._super(key, value);
+                break;
 
             case "disabled":
                 if (value && this.xhr) {
@@ -1006,6 +1046,10 @@ $.widget("rafflesia.combobox", {
         return this.element.val();
     },
 
+    focus: function () {
+        this.element.next().focus();
+    },
+
     search: function (value, event) {
         value = value != null ? value : this.searchBox.val();
 
@@ -1030,7 +1074,8 @@ $.widget("rafflesia.combobox", {
     },
 
     show: function () {
-        var self = this;
+        var self = this,
+            isTouchDevice = ('ontouchstart' in document.documentElement);
 
         if (this.options.disabled || this.dropdown.hasClass("open")) {
             return;
@@ -1051,7 +1096,7 @@ $.widget("rafflesia.combobox", {
           .on("click.combobox", "[data-toggle=dropdown]", lostfocusMethod)
           .on("focusin.combobox", lostfocusMethod);
 
-        if ('ontouchstart' in document.documentElement) {
+        if (isTouchDevice) {
             this.backdrop = $('<div>')
                 .addClass("ui-combobox-backdrop")
                 .insertAfter(this.button)
@@ -1079,7 +1124,13 @@ $.widget("rafflesia.combobox", {
 
         this.dropdown.addClass("open");
         this.button.attr("aria-expanded", "true");
-        this.searchBox.focus();
+
+        if (this.options.enableSearch) {
+            this.searchBox.focus();
+        } else if (!isTouchDevice) {
+            this._move("first");
+        }
+
         this._resizeCaptionPane();
         this._trigger("shown");
     },
@@ -1115,20 +1166,20 @@ $.widget("rafflesia.combobox", {
         }
 
         // Set
-        var previous = this._value(),
-            label = null;
-
-        if (value.length) {
-            label = this._getLabelFromArray(value);
-            this._label(label);
-        } else {
-            this._label();
-        }
-
-        this._resizeCaptionPane();
-
+        var previous = this._value();
         if (value !== previous) {
-            this._trigger("change", null, { item: { label: label, value: value } });
+            var label = (value.length) ? this._getLabelFromArray(value) : null,
+                item = { item: { label: label, value: value } };
+
+            if (this._trigger("changing", null, item) === false) {
+                return;
+            }
+
+            this._value(value);
+            this._label(label);
+            this._resizeCaptionPane();
+
+            this._trigger("change", null, item);
         }
     }
 });
