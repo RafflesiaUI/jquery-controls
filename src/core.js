@@ -1,6 +1,6 @@
 /*
 * Rafflesia UI
-* @version: 1.0.1
+* @version: 1.0.2
 * @author: GSLAI
 * @copyright: Copyright (c) 2016 Rafflesia UI Foundation. All rights reserved.
 * @license: Licensed under the MIT license.
@@ -9,7 +9,7 @@
 $.rafflesia = $.rafflesia || {};
 
 $.extend($.rafflesia, {
-    version: "1.0.1",
+    version: "1.0.2",
 
     keyCode: {
         ALT: 18,
@@ -36,6 +36,20 @@ $.extend($.rafflesia, {
         SPACE: 32,
         TAB: 9,
         UP: 38
+    }
+});
+
+var $focusFn = $.fn.focus;
+$.fn.extend({
+    focus: function () {
+        var element = $(this);
+
+        if (element.data("rafflesiaCombobox")) {
+            element.combobox("focus");
+            return;
+        }
+
+        return $focusFn.apply(this, arguments);
     }
 });
 
