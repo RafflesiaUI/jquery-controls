@@ -41,18 +41,18 @@ $.extend($.rafflesia, {
     }
 });
 
-var $focusFn = $.fn.focus;
 $.fn.extend({
-    focus: function () {
-        var element = $(this);
+    focus: (function (orig) {
+        return function () {
+            var element = $(this);
+            if (element.data("rafflesiaCombobox")) {
+                element.combobox("focus");
+                return;
+            }
 
-        if (element.data("rafflesiaCombobox")) {
-            element.combobox("focus");
-            return;
-        }
-
-        return $focusFn.apply(this, arguments);
-    }
+            return orig.apply(this, arguments);
+        };
+    })($.fn.focus)
 });
 
 String.format = function () {
@@ -987,6 +987,7 @@ $.widget("rafflesia.combobox", {
                     return;
                 }
 
+                this.options.source = value;
                 this._initSource();
                 break;
 
@@ -1045,7 +1046,7 @@ $.widget("rafflesia.combobox", {
     },
 
     focus: function () {
-        this.element.next().focus();
+        this.button.focus();
     },
 
     search: function (value, event) {

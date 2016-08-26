@@ -788,6 +788,7 @@ $.widget("rafflesia.combobox", {
                     return;
                 }
 
+                this.options.source = value;
                 this._initSource();
                 break;
 
@@ -846,7 +847,7 @@ $.widget("rafflesia.combobox", {
     },
 
     focus: function () {
-        this.element.next().focus();
+        this.button.focus();
     },
 
     search: function (value, event) {
