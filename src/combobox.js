@@ -1,13 +1,14 @@
 /*
 * Rafflesia UI
-* @version: 1.0.7
+* @version: 1.0.8
 * @author: GSLAI
 * @copyright: Copyright (c) 2016 Rafflesia UI Foundation. All rights reserved.
 * @license: Licensed under the MIT license.
 */
 
 $.widget("rafflesia.combobox", {
-    version: "1.0.7",
+    version: "1.0.8",
+    defaultElement: "<input>",
     options: {
         enableClear: false,
         enableSearch: true,

@@ -1,12 +1,12 @@
 /*
 * Rafflesia UI
-* @version: 1.0.0
+* @version: 1.0.1
 * @author: GSLAI
 * @copyright: Copyright (c) 2016 Rafflesia UI Foundation. All rights reserved.
 * @license: Licensed under the MIT license.
 */
 
-$.widget("rafflesia.ajaxPanel", {
+$.widget("rafflesia.ajaxpanel", {
     version: "1.0.0",
     options: {
         autoLoad: true,
