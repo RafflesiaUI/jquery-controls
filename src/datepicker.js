@@ -30,7 +30,7 @@ $.widget("rafflesia.datepicker", {
             },
 
             onClose: function () {
-                self._trigger("close");
+                self._trigger("hidden");
             }
         };
         self.element
@@ -56,5 +56,13 @@ $.widget("rafflesia.datepicker", {
         }
 
         this._super(key, value);
+    },
+    
+    hide: function () {
+        this.element.datepicker("hide");
+    },
+
+    show: function () {
+        this.element.datepicker("show");
     }
 });
