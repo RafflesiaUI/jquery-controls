@@ -1233,18 +1233,18 @@ $.widget("rafflesia.datepicker", {
 
     _destroy: function () {
         this.element
-            .datepicker("destroy")
+            .uidatepicker("destroy")
             .removeClass("ui-datepicker");
     },
 
     _setOption: function (key, value) {
         switch (key.toLowerCase()) {
             case "dateformat":
-                this.element.datepicker("option", "dateFormat", value);
+                this.element.uidatepicker("option", "dateFormat", value);
                 break;
 
             case "gotocurrent":
-                this.element.datepicker("option", "gotoCurrent", value);
+                this.element.uidatepicker("option", "gotoCurrent", value);
                 break;
         }
 
@@ -1252,10 +1252,10 @@ $.widget("rafflesia.datepicker", {
     },
 
     hide: function () {
-        this.element.datepicker("hide");
+        this.element.uidatepicker("hide");
     },
 
     show: function () {
-        this.element.datepicker("show");
+        this.element.uidatepicker("show");
     }
 });
