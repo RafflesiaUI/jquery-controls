@@ -1,6 +1,6 @@
 /*
 * Rafflesia UI
-* @version: 1.0.0
+* @version: 1.0.1
 * @author: GSLAI
 * @copyright: Copyright (c) 2016 Rafflesia UI Foundation. All rights reserved.
 * @license: Licensed under the MIT license.
@@ -10,7 +10,7 @@ $.fn.uidatepicker = $.fn.datepicker;
 delete $.fn.datepicker;
 
 $.widget("rafflesia.datepicker", {
-    version: "1.0.0",
+    version: "1.0.1",
     defaultElement: "<input>",
 
     options: {
@@ -34,14 +34,22 @@ $.widget("rafflesia.datepicker", {
             }
         };
         self.element
-            .addClass("ui-datepicker")
             .uidatepicker(uioptions);
+
+        self._bindEvents();
+    },
+
+    _bindEvents: function () {
+        this._on(window, {
+            resize: function () {
+                this.hide();
+            }
+        });
     },
 
     _destroy: function () {
         this.element
-            .uidatepicker("destroy")
-            .removeClass("ui-datepicker");
+            .uidatepicker("destroy");
     },
 
     _setOption: function (key, value) {
@@ -57,9 +65,11 @@ $.widget("rafflesia.datepicker", {
 
         this._super(key, value);
     },
-    
+
     hide: function () {
-        this.element.uidatepicker("hide");
+        this.element
+            .uidatepicker("hide")
+            .blur();
     },
 
     show: function () {
