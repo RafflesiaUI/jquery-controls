@@ -1233,6 +1233,12 @@ $.widget("rafflesia.datepicker", {
     },
 
     _bindEvents: function () {
+        this._on(this.element, {
+            blur: function () {
+                this.hide();
+            }
+        });
+
         this._on(window, {
             resize: function () {
                 this.hide();
