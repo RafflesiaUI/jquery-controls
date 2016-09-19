@@ -284,6 +284,8 @@ $.widget("rafflesia.combobox", {
 
         this.caption = $("<span>")
             .appendTo(captionPane);
+
+        this.modal = this.element.parents(".modal");
     },
 
     _createDropDown: function () {
@@ -538,6 +540,14 @@ $.widget("rafflesia.combobox", {
                 }
             }
         });
+
+        if (this.modal.length) {
+            this._on(this.modal, {
+                scroll: function (event) {
+                    this.hide();
+                }
+            });
+        }
     },
 
     _clear: function (event) {
@@ -793,6 +803,16 @@ $.widget("rafflesia.combobox", {
             top: parentOffset.top,
             bottom: parentOffset.top + parentSize.height
         };
+
+        if (this.modal.length) {
+            var modalOffset = this.modal.offset();
+            parentPosition = {
+                left: parentOffset.top - modalOffset.left,
+                right: (parentOffset.top - modalOffset.left) + parentSize.width,
+                top: parentOffset.top - modalOffset.top,
+                bottom: (parentOffset.top - modalOffset.top) + parentSize.height
+            };
+        }
 
         var myHorizontal = "left",
             atHorizontal = "left",

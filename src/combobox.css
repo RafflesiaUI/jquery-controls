@@ -211,6 +211,10 @@
     -webkit-overflow-scrolling: touch;
 }
 
+.modal-open > .ui-combobox-menu.open {
+    z-index: 1050;
+}
+
 @media (min-width: 992px) {
     .ui-combobox-menu > ul {
         max-height: 250px;
