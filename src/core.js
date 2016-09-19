@@ -9,7 +9,24 @@
 $.rafflesia = $.rafflesia || {};
 
 $.extend($.rafflesia, {
-    version: "1.0.2",
+    _culture: {
+        currencyFormat: {
+            decimalDigits: 2,
+            decimalSeparator: ".",
+            groupSeparator: ",",
+            negativePattern: "($n)",
+            currencySymbol: "RM"
+        },
+        dateFormat: {
+            shortDatePattern: "dd/MM/yyyy"
+        },
+        numberFormat: {
+            decimalDigits: 2,
+            decimalSeparator: ".",
+            groupSeparator: ",",
+            negativePattern: "-n"
+        }
+    },
 
     keyCode: {
         ALT: 18,
@@ -36,6 +53,101 @@ $.extend($.rafflesia, {
         SPACE: 32,
         TAB: 9,
         UP: 38
+    },
+
+    uiView: {
+        readOnly: 0,
+        edit: 2
+    },
+
+    version: "1.0.2",
+
+    endsWith: function (value, suffix, ignoreCase) {
+        if (ignoreCase) {
+            suffix = suffix.toLowerCase();
+            value = value.toLowerCase();
+        }
+
+        return (value.substr(value.length - suffix.length) === suffix);
+    },
+
+    getDateFormat: function () {
+        return this._culture.dateFormat;
+    },
+
+    setCultureInfo: function (cultureInfo) {
+        $.extend(true, this._culture, cultureInfo || {});
+        return this._culture;
+    },
+
+    startsWith: function (value, prefix, ignoreCase) {
+        if (ignoreCase) {
+            prefix = prefix.toLowerCase();
+            value = value.toLowerCase();
+        }
+
+        return (value.substr(0, prefix.length) === prefix);
+    },
+
+    toString: function (value, format) {
+        if (this.startsWith(format, "c", true)) {
+            var currencySymbol = this._culture.currencyFormat.currencySymbol,
+                decimalDigits = this._culture.currencyFormat.decimalDigits,
+                decimalSeparator = this._culture.currencyFormat.decimalSeparator,
+                groupSeparator = this._culture.currencyFormat.groupSeparator,
+                negativePattern = this._culture.currencyFormat.negativePattern;
+
+            var dataFormatPattern = "0";
+            if (groupSeparator && groupSeparator.length) {
+                dataFormatPattern = "0," + dataFormatPattern;
+            }
+
+            var precision = parseInt(format.substr(1));
+            if (precision > 0) {
+                decimalDigits = precision;
+            }
+
+            if (decimalSeparator && decimalSeparator.length && decimalDigits > 0) {
+                dataFormatPattern = dataFormatPattern + ("." + Array(decimalDigits + 1).join("0"));
+            }
+
+            dataFormatPattern = negativePattern.replace("n", dataFormatPattern);
+
+            return numeral(value)
+                .format(dataFormatPattern)
+                .replace("$", currencySymbol)
+                .replace(/,/g, groupSeparator)
+                .replace(".", decimalSeparator);
+        }
+        else if (this.startsWith(format, "d", true)) {
+            var decimalDigits = this._culture.numberFormat.decimalDigits,
+                decimalSeparator = this._culture.numberFormat.decimalSeparator,
+                groupSeparator = this._culture.numberFormat.groupSeparator,
+                negativePattern = this._culture.numberFormat.negativePattern;
+
+            var dataFormatPattern = "0";
+            if (groupSeparator && groupSeparator.length) {
+                dataFormatPattern = "0," + dataFormatPattern;
+            }
+
+            var precision = parseInt(format.substr(1));
+            if (precision > 0) {
+                decimalDigits = precision;
+            }
+
+            if (decimalSeparator && decimalSeparator.length && decimalDigits > 0) {
+                dataFormatPattern = dataFormatPattern + ("." + Array(decimalDigits + 1).join("0"));
+            }
+
+            dataFormatPattern = negativePattern.replace("n", dataFormatPattern);
+
+            return numeral(value)
+                .format(dataFormatPattern)
+                .replace(/,/g, groupSeparator)
+                .replace(".", decimalSeparator);
+        }
+
+        return '' + value;
     }
 });
 
@@ -61,12 +173,4 @@ String.format = function () {
     }
 
     return s;
-}
-
-String.prototype.endsWith = function (suffix) {
-    return (this.substr(this.length - suffix.length) === suffix);
-}
-
-String.prototype.startsWith = function (prefix) {
-    return (this.substr(0, prefix.length) === prefix);
 }
