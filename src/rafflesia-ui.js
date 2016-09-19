@@ -1233,14 +1233,22 @@ $.widget("rafflesia.datepicker", {
     },
 
     _bindEvents: function () {
-        this._on(this.element, {
-            blur: function () {
+        this._on(window, {
+            resize: function () {
                 this.hide();
             }
         });
 
-        this._on(window, {
-            resize: function () {
+        this._on(document, {
+            focusin: function (event) {
+                var target = $(event.target);
+
+                if (target.is(this.element) ||
+                    target.closest(this.element.uidatepicker("widget")).length) {
+                    return;
+                }
+
+                event.preventDefault();
                 this.hide();
             }
         });
@@ -1266,9 +1274,7 @@ $.widget("rafflesia.datepicker", {
     },
 
     hide: function () {
-        this.element
-            .uidatepicker("hide")
-            .blur();
+        this.element.uidatepicker("hide");
     },
 
     show: function () {
